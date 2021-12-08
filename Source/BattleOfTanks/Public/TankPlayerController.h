@@ -3,13 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Tank.h"
 #include "GameFramework/PlayerController.h"
 #include "TankPlayerController.generated.h"
 
-/**
- * 
- */
+class ATank;
+
+
 UCLASS()
 class BATTLEOFTANKS_API ATankPlayerController : public APlayerController
 {
@@ -20,12 +19,13 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
-	ATank* GetControlledTank() const { return Cast<ATank>(GetPawn()); }
-
+	
 protected:
 	virtual void BeginPlay() override;
 
 private:
+	ATank* GetControlledTank() const;
+
 	//获取准星正向射线击中的位置, 如果为真, 则击中
 	bool GetSightRayHitLocation(FVector& OutHitLocation) const;
 
@@ -36,6 +36,7 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Cross Hair")
 	FVector2D CrossHairLocationScale;
 
-
+	UPROPERTY(EditDefaultsOnly, Category = "Cross Hair")
+	float LineTraceRange;
 
 };

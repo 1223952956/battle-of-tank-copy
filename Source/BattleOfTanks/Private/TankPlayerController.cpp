@@ -2,6 +2,7 @@
 
 
 #include "TankPlayerController.h"
+#include "Tank.h"
 #include "DrawDebugHelpers.h"
 
 ATankPlayerController::ATankPlayerController() {
@@ -9,6 +10,8 @@ ATankPlayerController::ATankPlayerController() {
 
 	CrossHairLocationScale.X = 0.5f;
 	CrossHairLocationScale.Y = 0.3333f;
+
+	LineTraceRange = 100000.0f;
 }
 
 
@@ -25,16 +28,22 @@ void ATankPlayerController::BeginPlay() {
 
 void ATankPlayerController::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
+
 	AimTowardsCrosshair();
 }
 
+ATank* ATankPlayerController::GetControlledTank() const {
+	return Cast<ATank>(GetPawn());
+}
+
 void ATankPlayerController::AimTowardsCrosshair() {
-	if (!GetControlledTank()) return;
+	ATank* ControlledTank = GetControlledTank();
+	if (!ControlledTank) return;
 
 	FVector HitLocation;
 	if (GetSightRayHitLocation(HitLocation))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Look Location: %s"), *HitLocation.ToString());
+		ControlledTank->AimAt(HitLocation);
 	}
 	
 }
@@ -53,7 +62,7 @@ bool ATankPlayerController::GetSightRayHitLocation(FVector& OutHitLocation) cons
 	//屏幕坐标转世界坐标
 	if (!DeprojectScreenPositionToWorld(ScreenPosition.X, ScreenPosition.Y, WorldLocation, WorldDirection)) return false;
 
-	auto World = GetWorld();
+	UWorld* World = GetWorld();
 	check(World != nullptr);
 
 	//UE_LOG(LogTemp, Warning, TEXT("World Location: %s"), *WorldLocation.ToString());
@@ -61,11 +70,17 @@ bool ATankPlayerController::GetSightRayHitLocation(FVector& OutHitLocation) cons
 
 	//射线检测
 	FHitResult HitResult;
+	FVector StartLocation = WorldLocation;
+	FVector EndLocation = WorldLocation + LineTraceRange * WorldDirection;
 	
-	DrawDebugLine(GetWorld(), WorldLocation, WorldLocation + 100000.0f * WorldDirection, FColor::Red);
-	if (World->LineTraceSingleByChannel(HitResult, WorldLocation, WorldLocation + 100000.0f * WorldDirection, ECollisionChannel::ECC_WorldStatic))
+	//DrawDebugLine(GetWorld(), WorldLocation, WorldLocation + LineTraceRange * WorldDirection, FColor::Red);
+	if (World->LineTraceSingleByChannel(
+		HitResult, 
+		StartLocation, 
+		EndLocation, 
+		ECollisionChannel::ECC_Visibility))
 	{
-		OutHitLocation = HitResult.ImpactPoint;
+		OutHitLocation = HitResult.Location;
 		return true;
 	}
 	return false;
