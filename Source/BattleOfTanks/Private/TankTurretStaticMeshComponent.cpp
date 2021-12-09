@@ -4,6 +4,8 @@
 #include "TankTurretStaticMeshComponent.h"
 
 UTankTurretStaticMeshComponent::UTankTurretStaticMeshComponent() {
+	SetIsReplicated(true);
+
 	MaxDegreesPerSecond = 60.0f;
 	//MaxRotationDegree = 180.0f;
 	//MinRotationdegree = -180.0f;
@@ -29,4 +31,18 @@ void UTankTurretStaticMeshComponent::Rotate(float RelativeSpeed) {
 
 	//ÉèÖÃÐý×ª½Ç¶È
 	SetRelativeRotation(NewRotation);
+	SetRotationServer(NewRotation);
+}
+
+void UTankTurretStaticMeshComponent::SetRotationServer_Implementation(FRotator NewRotation) {
+	SetRotationClient(NewRotation);
+	SetRelativeRotation(NewRotation);
+}
+
+void UTankTurretStaticMeshComponent::SetRotationClient_Implementation(FRotator NewRotation) {
+	auto Owner = GetOwner();
+	check(Owner != nullptr);
+	if (Owner->GetLocalRole() < ROLE_AutonomousProxy) {
+		SetRelativeRotation(NewRotation);
+	}
 }

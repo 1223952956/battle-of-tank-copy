@@ -5,6 +5,8 @@
 
 
 UTankBarrelStaticMeshComponent::UTankBarrelStaticMeshComponent() {
+
+
 	MaxDegreesPerSecond = 20.0f;
 	MaxElevationDegree = 40.0f;
 	MinElevationdegree = 0.0f;
@@ -31,3 +33,4 @@ void UTankBarrelStaticMeshComponent::Elevate(float RelativeSpeed) {
 	//ÉèÖÃÐý×ª½Ç¶È
 	SetRelativeRotation(NewRotation);
 }
+

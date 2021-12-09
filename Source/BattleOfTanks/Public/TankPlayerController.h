@@ -30,6 +30,7 @@ private:
 	bool GetSightRayHitLocation(FVector& OutHitLocation) const;
 
 	//控制炮台瞄准准星的指向
+	//UFUNCTION(Server, unreliable)
 	void AimTowardsCrosshair();
 
 	//准星屏幕坐标比例
