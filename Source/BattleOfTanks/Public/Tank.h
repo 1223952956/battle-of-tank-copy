@@ -8,6 +8,7 @@
 
 class UTankAimingComponent;
 class UTankBarrelStaticMeshComponent;
+class UTankTurretStaticMeshComponent;
 
 UCLASS()
 class BATTLEOFTANKS_API ATank : public APawn
@@ -35,10 +36,10 @@ public:
 	void AimAt(FVector HitLocation);
 
 	UFUNCTION(BlueprintCallable, Category = "Setup")
-	void SetBarrelReference(UTankBarrelStaticMeshComponent* BarrelToSet);
+	void SetBarrelAndTurretReference(UTankBarrelStaticMeshComponent* BarrelToSet, UTankTurretStaticMeshComponent* TurretToSet);
 
 private:
 	//子弹速率(不确定)
 	UPROPERTY(EditDefaultsOnly, Category = "Fire")
-	float LaunchSpeed = 100000.0f;
+	float LaunchSpeed;
 };

@@ -4,13 +4,14 @@
 #include "TankAimingComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "TankBarrelStaticMeshComponent.h"
+#include "TankTurretStaticMeshComponent.h"
 
 // Sets default values for this component's properties
 UTankAimingComponent::UTankAimingComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 
 	// ...
 }
@@ -50,10 +51,14 @@ void UTankAimingComponent::AimAt(FVector WorldSpaceAim, float LaunchSpeed) {
 		LaunchVelocity,
 		FireLocation,
 		WorldSpaceAim,
-		LaunchSpeed,false,
+		LaunchSpeed,
+		false,
 		0.0f,
 		0.0f,
-		ESuggestProjVelocityTraceOption::DoNotTrace
+		ESuggestProjVelocityTraceOption::DoNotTrace,
+		FCollisionResponseParams::DefaultResponseParam,
+		TArray<AActor*>(),
+		false
 		)) return;
 
 	//获取预测速度标准化向量
@@ -66,8 +71,10 @@ void UTankAimingComponent::AimAt(FVector WorldSpaceAim, float LaunchSpeed) {
 	//UE_LOG(LogTemp, Warning, TEXT("Aiming at %s"), *AimDirection.ToString());
 }
 
-void UTankAimingComponent::SetBarrelReference(UTankBarrelStaticMeshComponent* BarrelToSet) {
+void UTankAimingComponent::SetBarrelAndTurretReference(UTankBarrelStaticMeshComponent* BarrelToSet, UTankTurretStaticMeshComponent* TurretToSet) {
+	check(BarrelToSet != nullptr && TurretToSet != nullptr);
 	Barrel = BarrelToSet;
+	Turret = TurretToSet;
 }
 
 void UTankAimingComponent::MoveBarrelTowards(FVector AimDirection) {
@@ -75,11 +82,17 @@ void UTankAimingComponent::MoveBarrelTowards(FVector AimDirection) {
 	auto BarrelRotation = Barrel->GetForwardVector().Rotation();
 	auto AimRotation = AimDirection.Rotation();
 
-	//调用barrel类方法转动
+	//获得转动差
 	auto DeltaRotation = AimRotation - BarrelRotation;
-	UE_LOG(LogTemp, Warning, TEXT("rotate from %s to %s"), *BarrelRotation.ToString(), *AimRotation.ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("rotate from %s to %s"), *BarrelRotation.ToString(), *AimRotation.ToString());
 
-	
-	Barrel->Elevate(1.0f);
+	if (FMath::Abs(DeltaRotation.Yaw) >= 180.0f)
+	{
+		DeltaRotation.Yaw = DeltaRotation.Yaw > 0 ? DeltaRotation.Yaw - 360.0f : DeltaRotation.Yaw + 360.0f;
+	}
+
+	//调用炮管和炮台旋转
+	Barrel->Elevate(DeltaRotation.Pitch);
+	Turret->Rotate(DeltaRotation.Yaw);
 }
 

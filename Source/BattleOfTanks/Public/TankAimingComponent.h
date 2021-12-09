@@ -7,6 +7,7 @@
 #include "TankAimingComponent.generated.h"
 
 class UTankBarrelStaticMeshComponent;
+class UTankTurretStaticMeshComponent;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class BATTLEOFTANKS_API UTankAimingComponent : public UActorComponent
@@ -17,7 +18,8 @@ public:
 	// Sets default values for this component's properties
 	UTankAimingComponent();
 
-	void SetBarrelReference(UTankBarrelStaticMeshComponent* BarrelToSet);
+	void SetBarrelAndTurretReference(UTankBarrelStaticMeshComponent* BarrelToSet, UTankTurretStaticMeshComponent* TurretToSet);
+
 
 protected:
 	// Called when the game starts
@@ -34,5 +36,5 @@ public:
 
 private:
 	UTankBarrelStaticMeshComponent* Barrel;
-
+	UTankTurretStaticMeshComponent* Turret;
 };

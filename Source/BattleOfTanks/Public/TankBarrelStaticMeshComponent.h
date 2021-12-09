@@ -17,9 +17,9 @@ class BATTLEOFTANKS_API UTankBarrelStaticMeshComponent : public UStaticMeshCompo
 public:
 	UTankBarrelStaticMeshComponent();
 
-	//-1 代表向下最大转速, +1代表向上最大转速
+	//抬升自身(炮管)
 	void Elevate(float RelativeSpeed);
-
+	
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Setup")
 	float MaxDegreesPerSecond;
