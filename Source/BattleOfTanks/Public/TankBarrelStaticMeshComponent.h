@@ -29,4 +29,10 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Setup")
 	float MinElevationdegree;
+
+	UFUNCTION(Server, unreliable)
+	void SetElevationServer(FRotator NewElevation);
+
+	UFUNCTION(NetMulticast, unreliable)
+	void SetElevationClient(FRotator NewElevation);
 };

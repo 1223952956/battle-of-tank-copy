@@ -11,7 +11,7 @@ ATankPlayerController::ATankPlayerController() {
 	CrossHairLocationScale.X = 0.5f;
 	CrossHairLocationScale.Y = 0.3333f;
 
-	LineTraceRange = 100000.0f;
+	LineTraceRange = 50000.0f;
 }
 
 
@@ -94,7 +94,8 @@ bool ATankPlayerController::GetSightRayHitLocation(FVector& OutHitLocation) cons
 		OutHitLocation = HitResult.Location;
 		return true;
 	}
-	return false;
+	OutHitLocation = EndLocation;
+	return true;
 
 	
 

@@ -20,16 +20,15 @@ public:
 	//旋转自身(炮台)
 	void Rotate(float RelativeSpeed);
 
+private:
+	UPROPERTY(EditDefaultsOnly, Category = "Setup")
+	float MaxDegreesPerSecond;
+
 	UFUNCTION(Server, unreliable)
 	void SetRotationServer(FRotator NewRotation);
 
 	UFUNCTION(NetMulticast, unreliable)
 	void SetRotationClient(FRotator NewRotation);
-
-
-private:
-	UPROPERTY(EditDefaultsOnly, Category = "Setup")
-	float MaxDegreesPerSecond;
 
 	//UPROPERTY(EditDefaultsOnly, Category = "Setup")
 	//float MaxRotationDegree;

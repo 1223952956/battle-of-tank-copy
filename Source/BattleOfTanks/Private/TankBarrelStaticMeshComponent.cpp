@@ -5,7 +5,7 @@
 
 
 UTankBarrelStaticMeshComponent::UTankBarrelStaticMeshComponent() {
-
+	SetIsReplicated(true);
 
 	MaxDegreesPerSecond = 20.0f;
 	MaxElevationDegree = 40.0f;
@@ -32,5 +32,19 @@ void UTankBarrelStaticMeshComponent::Elevate(float RelativeSpeed) {
 	
 	//ÉèÖÃÐý×ª½Ç¶È
 	SetRelativeRotation(NewRotation);
+	SetElevationServer(NewRotation);
+	
 }
 
+void UTankBarrelStaticMeshComponent::SetElevationServer_Implementation(FRotator NewElevation) {
+	SetRelativeRotation(NewElevation);
+	SetElevationClient(NewElevation);
+}
+
+void UTankBarrelStaticMeshComponent::SetElevationClient_Implementation(FRotator NewElevation) {
+	auto Owner = GetOwner();
+	check(Owner != nullptr);
+	if (Owner->GetLocalRole() < ROLE_AutonomousProxy) {
+		SetRelativeRotation(NewElevation);
+	}
+}
