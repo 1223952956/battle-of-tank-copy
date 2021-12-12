@@ -26,10 +26,14 @@ private:
 
 	ATank* GetControlledTank() const;
 
-	ATank* GetPlayerTank() const;
+	void GetPlayerTank();
 
-	bool GetPlayerTankLocation(FVector& OutLocation) const;
+	bool GetPlayerTankLocation(FVector& OutLocation);
 
 	//Ãé×¼Íæ¼Ò
 	void AimTowardsPlayer();
+
+	void Fire();
+
+	ATank* PlayerTank;
 };

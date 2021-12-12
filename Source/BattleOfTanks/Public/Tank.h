@@ -10,6 +10,8 @@ class UTankAimingComponent;
 class UTankBarrelStaticMeshComponent;
 class UTankTurretStaticMeshComponent;
 class AProjectile;
+class UTankTrackStaticMeshComponent;
+class UTankMovementComponent;
 
 UCLASS()
 class BATTLEOFTANKS_API ATank : public APawn
@@ -33,12 +35,19 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-//摄像机
+//输入
 protected:
 	void PitchCamera(float AxisValue);
 
 	void YawCamera(float AxisValue);
 
+	void LeftTrack(float AxisValue);
+
+	void RightTrack(float AxisValue);
+
+	void MoveForward(float AxisValue);
+
+//
 public:
 	//坦克瞄准
 	void AimAt(FVector HitLocation);
@@ -53,12 +62,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Setup")
 	void SetCameraReference(USceneComponent* AzimuthGimbalToSet, USceneComponent* SpringArmToSet);
 
+	UFUNCTION(BlueprintCallable, Category = "Setup")
+	void SetTrackReference(UTankTrackStaticMeshComponent* LeftTrackToSet, UTankTrackStaticMeshComponent* RightTrackToSet);
+
 //组件
-private:
+protected:
+	UPROPERTY(BlueprintReadOnly)
 	UTankAimingComponent* TankAimingComponent;
 
-
-
+	UPROPERTY(BlueprintReadOnly)
+	UTankMovementComponent* TankMovementComponent;
+private:
 	UPROPERTY(EditDefaultsOnly, Category = "Camera")
 	USceneComponent* AzimuthGimbalRef;
 
@@ -68,8 +82,14 @@ private:
 	//本地炮管指针
 	UTankBarrelStaticMeshComponent* Barrel;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Track")
+	UTankTrackStaticMeshComponent* LeftTrack;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Track")
+	UTankTrackStaticMeshComponent* RightTrack;
+
 //开火
-protected:
+public:
 	//子弹速率(不确定)
 	UPROPERTY(EditDefaultsOnly, Category = "Fire")
 	float LaunchSpeed;

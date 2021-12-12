@@ -19,34 +19,37 @@ AProjectile::AProjectile()
 
 	bReplicates = true;
 
+	DamageType = UDamageType::StaticClass();
+	Damage = 10.0f;
+
 	//创建碰撞组件并指定为根组件
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("RootComponent"));
 	CollisionComp->InitSphereRadius(37.5f);
 	CollisionComp->SetCollisionProfileName(TEXT("BlockAllDynamic"));
 	RootComponent = CollisionComp;
 
-	if (GetLocalRole() == ROLE_Authority) {
-		CollisionComp->OnComponentHit.AddDynamic(this, &AProjectile::OnProjectileImpact);
-	}
+
 	
+		
+
 	//创建静态网格组件
 	StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
 	StaticMeshComp->SetupAttachment(RootComponent);
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> DefaultMesh(TEXT("/Game/StarterContent/Shapes/Shape_Sphere.Shape_Sphere"));
 	if (DefaultMesh.Succeeded()) {
 		StaticMeshComp->SetStaticMesh(DefaultMesh.Object);
-		StaticMeshComp->SetRelativeLocation(FVector(0.0f, 0.0f, -37.5f));
-		StaticMeshComp->SetRelativeScale3D(FVector(0.75f));
+		StaticMeshComp->SetRelativeLocation(FVector(0.0f, 0.0f, -12.5f));
+		StaticMeshComp->SetRelativeScale3D(FVector(0.25f));
 	}
 
 	ProjectileMovementComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
 	ProjectileMovementComp->SetUpdatedComponent(RootComponent);
-	ProjectileMovementComp->InitialSpeed = 1500.0f;
+	ProjectileMovementComp->InitialSpeed = 10000.0f;
+	ProjectileMovementComp->MaxSpeed = 10000.0f;
 	ProjectileMovementComp->bRotationFollowsVelocity = true;
 	ProjectileMovementComp->ProjectileGravityScale = 0.0f;
 
-	DamageType = UDamageType::StaticClass();
-	Damage = 10.0f;
+
 
 
 }
@@ -60,6 +63,9 @@ void AProjectile::BeginPlay()
 	FString str = TEXT("Projectile Spawned at ");
 	str += GetActorLocation().ToString();
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, str);
+	if (GetLocalRole() == ROLE_Authority) {
+		CollisionComp->OnComponentHit.AddDynamic(this, &AProjectile::OnProjectileImpact);
+	}
 }
 
 // Called every frame
@@ -77,10 +83,11 @@ void AProjectile::Destroyed()
 
 void AProjectile::OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
+	//UE_LOG(LogTemp, Warning, TEXT("Hit !!!"));
 	if (OtherActor)
 	{
 		UGameplayStatics::ApplyPointDamage(OtherActor, Damage, NormalImpulse, Hit, GetInstigator()->Controller, this, DamageType);
-		HitComponent->AddImpulseAtLocation(ProjectileMovementComp->Velocity * 100.0f, Hit.ImpactPoint);
+		HitComponent->AddImpulseAtLocation(ProjectileMovementComp->Velocity, Hit.ImpactPoint);
 	}
 
 	Destroy();
