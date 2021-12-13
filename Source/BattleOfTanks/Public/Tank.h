@@ -41,11 +41,13 @@ protected:
 
 	void YawCamera(float AxisValue);
 
-	void LeftTrack(float AxisValue);
+	void LeftTrackThrottle(float AxisValue);
 
-	void RightTrack(float AxisValue);
+	void RightTrackThrottle(float AxisValue);
 
 	void MoveForward(float AxisValue);
+
+	void TurnRight(float AxisValue);
 
 //
 public:
@@ -120,6 +122,9 @@ public:
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentHealth)
 	float CurrentHealth;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Health")
+	float Defence;
+
 	UFUNCTION()
 	void OnRep_CurrentHealth();
 
@@ -137,4 +142,27 @@ public:
 
 protected:
 	void OnHealthUpdate();
+
+//ÒÆ¶¯
+protected:
+	float MaxMoveSpeed;
+
+	float MaxTurnSpeed;
+
+	float MoveAxisValue;
+
+	float TurnAxisValue;
+
+	UFUNCTION(Server, Unreliable)
+	void MoveForwardServer(FVector NewLocation);
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void MoveForwardMulticast(FVector NewLocation);
+
+	UFUNCTION(Server, Unreliable)
+	void TurnRightServer(FRotator NewRotation);
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void TurnRightMulticast(FRotator NewRotation);
+
 };

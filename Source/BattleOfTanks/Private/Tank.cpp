@@ -32,6 +32,11 @@ ATank::ATank()
 	MaxHealth = 100.0f;
 	CurrentHealth = MaxHealth;
 
+	Defence = 5.0f;
+
+	MaxMoveSpeed = 1000.0f;
+	MaxTurnSpeed = 30.0f;
+
 	//Ä¬ÈÏai¿ØÖÆÀà
 	AIControllerClass = ATankAIController::StaticClass();
 }
@@ -48,6 +53,20 @@ void ATank::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (MoveAxisValue != 0.0f) {
+		FVector NewLocation = GetActorLocation();
+		NewLocation += GetActorForwardVector() * MoveAxisValue * DeltaTime * MaxMoveSpeed;
+		SetActorLocation(NewLocation);
+		MoveForwardServer(NewLocation);
+	}
+
+	if (TurnAxisValue != 0.0f) {
+		FRotator NewRotation = GetActorRotation();
+		NewRotation.Yaw += TurnAxisValue * DeltaTime * MaxTurnSpeed;
+		SetActorRotation(NewRotation);
+		TurnRightServer(NewRotation);
+	}
+
 }
 
 // Called to bind functionality to input
@@ -58,10 +77,12 @@ void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis(TEXT("AimElevation"), this, &ATank::PitchCamera);
 	PlayerInputComponent->BindAxis(TEXT("AimAzimuth"), this, &ATank::YawCamera);
 
-	PlayerInputComponent->BindAxis(TEXT("LeftTrackThrottle"), this, &ATank::LeftTrack);
-	PlayerInputComponent->BindAxis(TEXT("RightTrackThrottle"), this, &ATank::RightTrack);
+	PlayerInputComponent->BindAxis(TEXT("LeftTrackThrottle"), this, &ATank::LeftTrackThrottle);
+	PlayerInputComponent->BindAxis(TEXT("RightTrackThrottle"), this, &ATank::RightTrackThrottle);
 
 	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &ATank::MoveForward);
+
+	PlayerInputComponent->BindAxis(TEXT("TurnRight"), this, &ATank::TurnRight);
 
 	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Pressed, this, &ATank::StartFire);
 
@@ -93,7 +114,7 @@ void ATank::SetCameraReference(USceneComponent* AzimuthGimbalToSet, USceneCompon
 }
 
 void ATank::SetTrackReference(UTankTrackStaticMeshComponent* LeftTrackToSet, UTankTrackStaticMeshComponent* RightTrackToSet) {
-	check(LeftTrack != nullptr && RightTrack != nullptr);
+	check(LeftTrackToSet != nullptr && RightTrackToSet != nullptr);
 	LeftTrack = LeftTrackToSet;
 	RightTrack = RightTrackToSet;
 }
@@ -114,16 +135,42 @@ void ATank::YawCamera(float AxisValue) {
 	AzimuthGimbalRef->SetWorldRotation(NewRotation);
 }
 
-void ATank::LeftTrack(float AxisValue) {
-	LeftTrackRef->SetThrottle(AxisValue * CurrentHealth / MaxHealth);
+void ATank::LeftTrackThrottle(float AxisValue) {
+	LeftTrack->SetThrottle(AxisValue * CurrentHealth / MaxHealth);
 }
 
-void ATank::RightTrack(float AxisValue) {
-	RightTrackRef->SetThrottle(AxisValue * CurrentHealth / MaxHealth);
+void ATank::RightTrackThrottle(float AxisValue) {
+	RightTrack->SetThrottle(AxisValue * CurrentHealth / MaxHealth);
 }
 
 void ATank::MoveForward(float AxisValue) {
-	TankMovementComponent->IntendMoveForward(AxisValue * CurrentHealth / MaxHealth);
+	//TankMovementComponent->IntendMoveForward(AxisValue * CurrentHealth / MaxHealth);
+	MoveAxisValue = AxisValue * CurrentHealth / MaxHealth;
+}
+
+void ATank::MoveForwardServer_Implementation(FVector NewLocation) {
+	SetActorLocation(NewLocation);
+	MoveForwardMulticast(NewLocation);
+}
+
+void ATank::MoveForwardMulticast_Implementation(FVector NewLocation) {
+	if(GetLocalRole() < ROLE_AutonomousProxy)
+		SetActorLocation(NewLocation);
+}
+
+void ATank::TurnRight(float AxisValue) {
+	TurnAxisValue = AxisValue;
+}
+
+
+void ATank::TurnRightServer_Implementation(FRotator NewRotation) {
+	SetActorRotation(NewRotation);
+	TurnRightMulticast(NewRotation);
+}
+
+void ATank::TurnRightMulticast_Implementation(FRotator NewRotation) {
+	if (GetLocalRole() < ROLE_AutonomousProxy)
+		SetActorRotation(NewRotation);
 }
 
 void ATank::StartFire() {
@@ -198,7 +245,8 @@ void ATank::SetCurrentHealth(float healthValue)
 
 float ATank::TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	float damageApplied = CurrentHealth - DamageTaken;
+	float TrueDamage = DamageTaken - Defence > 0 ? DamageTaken - Defence : DamageTaken / 4;
+	float damageApplied = CurrentHealth - TrueDamage;
 	SetCurrentHealth(damageApplied);
 	return damageApplied;
 }
