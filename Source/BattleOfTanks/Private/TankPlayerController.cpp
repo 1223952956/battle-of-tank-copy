@@ -92,6 +92,7 @@ bool ATankPlayerController::GetSightRayHitLocation(FVector& OutHitLocation) cons
 		ECollisionChannel::ECC_Visibility))
 	{
 		OutHitLocation = HitResult.Location;
+		//UE_LOG(LogTemp, Warning, TEXT("Hit Location: %s"), *OutHitLocation.ToString());
 		return true;
 	}
 	OutHitLocation = EndLocation;

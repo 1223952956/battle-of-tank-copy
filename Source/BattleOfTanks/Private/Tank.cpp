@@ -3,11 +3,14 @@
 
 #include "Tank.h"
 #include "TankAimingComponent.h"
+#include "TankMovementComponent.h"
 #include "TankBarrelStaticMeshComponent.h"
 #include "TankTurretStaticMeshComponent.h"
 #include "Projectile.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
+#include "TankAIController.h"
+#include "TankTrackStaticMeshComponent.h"
 
 // Sets default values
 ATank::ATank()
@@ -19,6 +22,7 @@ ATank::ATank()
 	SetReplicateMovement(true);
 
 	TankAimingComponent = CreateDefaultSubobject<UTankAimingComponent>(TEXT("Aim Component"));
+	TankMovementComponent = CreateDefaultSubobject<UTankMovementComponent>(TEXT("Move Component"));
 
 	LaunchSpeed = 10000.0f;
 
@@ -28,6 +32,8 @@ ATank::ATank()
 	MaxHealth = 100.0f;
 	CurrentHealth = MaxHealth;
 
+	//Ä¬ÈÏai¿ØÖÆÀà
+	AIControllerClass = ATankAIController::StaticClass();
 }
 
 // Called when the game starts or when spawned
@@ -52,6 +58,11 @@ void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis(TEXT("AimElevation"), this, &ATank::PitchCamera);
 	PlayerInputComponent->BindAxis(TEXT("AimAzimuth"), this, &ATank::YawCamera);
 
+	PlayerInputComponent->BindAxis(TEXT("LeftTrackThrottle"), this, &ATank::LeftTrack);
+	PlayerInputComponent->BindAxis(TEXT("RightTrackThrottle"), this, &ATank::RightTrack);
+
+	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &ATank::MoveForward);
+
 	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Pressed, this, &ATank::StartFire);
 
 }
@@ -70,6 +81,7 @@ void ATank::AimAt(FVector HitLocation) {
 }
 
 void ATank::SetBarrelAndTurretReference(UTankBarrelStaticMeshComponent* BarrelToSet, UTankTurretStaticMeshComponent* TurretToSet) {
+	check(BarrelToSet != nullptr && TurretToSet != nullptr);
 	Barrel = BarrelToSet;
 	TankAimingComponent->SetBarrelAndTurretReference(BarrelToSet, TurretToSet);
 }
@@ -78,6 +90,12 @@ void ATank::SetCameraReference(USceneComponent* AzimuthGimbalToSet, USceneCompon
 	check(AzimuthGimbalToSet != nullptr && SpringArmToSet != nullptr);
 	AzimuthGimbalRef = AzimuthGimbalToSet;
 	SpringArmRef = SpringArmToSet;
+}
+
+void ATank::SetTrackReference(UTankTrackStaticMeshComponent* LeftTrackToSet, UTankTrackStaticMeshComponent* RightTrackToSet) {
+	check(LeftTrack != nullptr && RightTrack != nullptr);
+	LeftTrack = LeftTrackToSet;
+	RightTrack = RightTrackToSet;
 }
 
 void ATank::PitchCamera(float AxisValue) {
@@ -96,6 +114,18 @@ void ATank::YawCamera(float AxisValue) {
 	AzimuthGimbalRef->SetWorldRotation(NewRotation);
 }
 
+void ATank::LeftTrack(float AxisValue) {
+	LeftTrackRef->SetThrottle(AxisValue * CurrentHealth / MaxHealth);
+}
+
+void ATank::RightTrack(float AxisValue) {
+	RightTrackRef->SetThrottle(AxisValue * CurrentHealth / MaxHealth);
+}
+
+void ATank::MoveForward(float AxisValue) {
+	TankMovementComponent->IntendMoveForward(AxisValue * CurrentHealth / MaxHealth);
+}
+
 void ATank::StartFire() {
 	if (bIsFiring) return;
 
@@ -112,7 +142,7 @@ void ATank::StopFire() {
 
 
 void ATank::HandleFire_Implementation() {
-	UE_LOG(LogTemp, Warning, TEXT("Tank Fire !!!") );
+	//UE_LOG(LogTemp, Warning, TEXT("Tank Fire !!!") );
 
 	check(Barrel != nullptr);
 
@@ -172,3 +202,4 @@ float ATank::TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEven
 	SetCurrentHealth(damageApplied);
 	return damageApplied;
 }
+
