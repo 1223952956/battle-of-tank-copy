@@ -12,6 +12,7 @@ class UTankTurretStaticMeshComponent;
 class AProjectile;
 class UTankTrackStaticMeshComponent;
 class UTankMovementComponent;
+class USphereComponent;
 
 UCLASS()
 class BATTLEOFTANKS_API ATank : public APawn
@@ -74,6 +75,9 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	UTankMovementComponent* TankMovementComponent;
+
+	//UPROPERTY(EditDefaultsOnly, Category = "Component")
+	//USphereComponent* PickUpDetectComp;
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Camera")
 	USceneComponent* AzimuthGimbalRef;
@@ -92,6 +96,9 @@ private:
 
 //开火
 public:
+	UPROPERTY(EditDefaultsOnly, Category = "Fire")
+	UParticleSystem* FireParticleSystem;
+
 	//子弹速率(不确定)
 	UPROPERTY(EditDefaultsOnly, Category = "Fire")
 	float LaunchSpeed;

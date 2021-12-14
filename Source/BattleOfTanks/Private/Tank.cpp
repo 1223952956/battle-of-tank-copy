@@ -11,6 +11,9 @@
 #include "Engine/Engine.h"
 #include "TankAIController.h"
 #include "TankTrackStaticMeshComponent.h"
+#include "Components/SphereComponent.h"
+#include "Particles/ParticleSystem.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ATank::ATank()
@@ -23,6 +26,10 @@ ATank::ATank()
 
 	TankAimingComponent = CreateDefaultSubobject<UTankAimingComponent>(TEXT("Aim Component"));
 	TankMovementComponent = CreateDefaultSubobject<UTankMovementComponent>(TEXT("Move Component"));
+
+
+
+
 
 	LaunchSpeed = 10000.0f;
 
@@ -180,6 +187,7 @@ void ATank::StartFire() {
 	UWorld* World = GetWorld();
 	check(World != nullptr);
 	World->GetTimerManager().SetTimer(FiringTimer, this, &ATank::StopFire, FireRate, false);
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), FireParticleSystem, Barrel->GetSocketLocation(TEXT("Projectile")), FRotator(0.0f), true);
 	HandleFire();
 }
 
@@ -194,7 +202,7 @@ void ATank::HandleFire_Implementation() {
 	check(Barrel != nullptr);
 
 	FVector spawnLocation = Barrel->GetSocketLocation(TEXT("Projectile"));
-	UE_LOG(LogTemp, Warning, TEXT("spawnLocation: %s"), *spawnLocation.ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("spawnLocation: %s"), *spawnLocation.ToString());
 	FRotator spawnRotation = Barrel->GetSocketRotation(TEXT("Projectile"));
 
 	FActorSpawnParameters spawnParameters;
@@ -203,6 +211,7 @@ void ATank::HandleFire_Implementation() {
 
 	check(GetWorld() != nullptr);
 	AProjectile* spawnedProjectile = GetWorld()->SpawnActor<AProjectile>(ProjectileBlueprint, spawnLocation, spawnRotation, spawnParameters);
+	//spawnedProjectile->Launch(LaunchSpeed);
 }
 
 void ATank::OnRep_CurrentHealth()

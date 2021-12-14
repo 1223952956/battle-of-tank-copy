@@ -1,3 +1,4 @@
+
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
@@ -22,12 +23,19 @@ AProjectile::AProjectile()
 	DamageType = UDamageType::StaticClass();
 	Damage = 10.0f;
 
-	//创建碰撞组件并指定为根组件
-	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("RootComponent"));
-	CollisionComp->InitSphereRadius(37.5f);
-	CollisionComp->SetCollisionProfileName(TEXT("BlockAllDynamic"));
-	RootComponent = CollisionComp;
+	Speed = 10000.0f;
 
+	//创建碰撞组件并设为根组件
+	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComponent"));
+	CollisionComp->InitSphereRadius(37.5f);
+	CollisionComp->SetCollisionProfileName(TEXT("Projectile"));
+	CollisionComp->SetupAttachment(RootComponent);
+	RootComponent = CollisionComp;
+	CollisionComp->SetNotifyRigidBodyCollision(true);
+	CollisionComp->SetGenerateOverlapEvents(true);
+	CollisionComp->SetSimulatePhysics(true);
+	
+	//CollisionComp->bAutoActivate = false;
 
 	
 		
@@ -41,14 +49,26 @@ AProjectile::AProjectile()
 		StaticMeshComp->SetRelativeLocation(FVector(0.0f, 0.0f, -12.5f));
 		StaticMeshComp->SetRelativeScale3D(FVector(0.25f));
 	}
+	//StaticMeshComp->SetCollisionProfileName(TEXT("Projectile"));
+	//StaticMeshComp->SetGenerateOverlapEvents(true);
+	//StaticMeshComp->SetSimulatePhysics(true);
+	//RootComponent = StaticMeshComp;
 
+	//指定粒子效果
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> DefaultExplosionEffect(TEXT("/Game/StarterContent/Particles/P_Explosion.P_Explosion"));
+	if (DefaultExplosionEffect.Succeeded()) {
+		ExplosionEffect = DefaultExplosionEffect.Object;
+	}
+
+	//创建子弹运动组件
 	ProjectileMovementComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
+	ProjectileMovementComp->InitialSpeed = Speed;
+	//ProjectileMovementComp->SetVelocityInLocalSpace(FVector::ForwardVector *);
 	ProjectileMovementComp->SetUpdatedComponent(RootComponent);
-	ProjectileMovementComp->InitialSpeed = 10000.0f;
-	ProjectileMovementComp->MaxSpeed = 10000.0f;
+	ProjectileMovementComp->MaxSpeed = 100000.0f;
 	ProjectileMovementComp->bRotationFollowsVelocity = true;
 	ProjectileMovementComp->ProjectileGravityScale = 0.0f;
-
+	//ProjectileMovementComp->bAutoActivate = false;
 
 
 
@@ -59,12 +79,14 @@ void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 	//UE_LOG(LogTemp, Warning, TEXT("Projectile spawned at %s."), *GetActorLocation().ToString());
-	check(GEngine != nullptr);
-	FString str = TEXT("Projectile Spawned at ");
-	str += GetActorLocation().ToString();
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, str);
+	//check(GEngine != nullptr);
+	//FString str = TEXT("Projectile Spawned at ");
+	//str += GetActorLocation().ToString();
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, str);
 	if (GetLocalRole() == ROLE_Authority) {
-		CollisionComp->OnComponentHit.AddDynamic(this, &AProjectile::OnProjectileImpact);
+
+		CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnProjectileOverlapPawn);
+		CollisionComp->OnComponentHit.AddDynamic(this, &AProjectile::OnProjectileHitGround);
 	}
 }
 
@@ -81,14 +103,28 @@ void AProjectile::Destroyed()
 	UGameplayStatics::SpawnEmitterAtLocation(this, ExplosionEffect, spawnLocation, FRotator::ZeroRotator, true, EPSCPoolMethod::AutoRelease);
 }
 
-void AProjectile::OnProjectileImpact(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+void AProjectile::OnProjectileOverlapPawn(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	//UE_LOG(LogTemp, Warning, TEXT("Hit !!!"));
+	UE_LOG(LogTemp, Warning, TEXT("Hit Pawn !!!"));
 	if (OtherActor)
 	{
-		UGameplayStatics::ApplyPointDamage(OtherActor, Damage, NormalImpulse, Hit, GetInstigator()->Controller, this, DamageType);
-		HitComponent->AddImpulseAtLocation(ProjectileMovementComp->Velocity, Hit.ImpactPoint);
+		UGameplayStatics::ApplyDamage(OtherActor, Damage, GetInstigator()->Controller, this, DamageType);
+		//OtherComp->AddImpulseAtLocation(ProjectileMovementComp->Velocity, SweepResult.ImpactPoint);
 	}
 
 	Destroy();
 }
+
+void AProjectile::OnProjectileHitGround(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) {
+	UE_LOG(LogTemp, Warning, TEXT("Hit Ground !!!"));
+	Destroy();
+}
+
+
+//void AProjectile::Launch(float LaunchSpeed) {
+//	
+//	ProjectileMovementComp->Velocity = LaunchSpeed * GetActorForwardVector();
+//	UE_LOG(LogTemp, Warning, TEXT("Velocity : %s"), *ProjectileMovementComp->Velocity.ToString());
+//	ProjectileMovementComp->Activate();
+//	//CollisionComp->Activate();
+//}
