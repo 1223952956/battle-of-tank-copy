@@ -29,9 +29,6 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Damage")
 	float Damage;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Speed")
-	float Speed;
-
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -51,6 +48,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Damage")
 	TSubclassOf<UDamageType> DamageType;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Speed")
+	float Speed;
 	//void Launch(float LaunchSpeed);
 
 protected:

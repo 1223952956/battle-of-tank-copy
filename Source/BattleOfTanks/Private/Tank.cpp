@@ -27,11 +27,7 @@ ATank::ATank()
 	TankAimingComponent = CreateDefaultSubobject<UTankAimingComponent>(TEXT("Aim Component"));
 	TankMovementComponent = CreateDefaultSubobject<UTankMovementComponent>(TEXT("Move Component"));
 
-
-
-
-
-	LaunchSpeed = 10000.0f;
+	LaunchSpeed = 3000.0f;
 
 	FireRate = 1.0f;
 	bIsFiring = false;
@@ -43,6 +39,8 @@ ATank::ATank()
 
 	MaxMoveSpeed = 1000.0f;
 	MaxTurnSpeed = 30.0f;
+
+	//bIsSwitching = false;
 
 	//默认ai控制类
 	AIControllerClass = ATankAIController::StaticClass();
@@ -84,8 +82,8 @@ void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis(TEXT("AimElevation"), this, &ATank::PitchCamera);
 	PlayerInputComponent->BindAxis(TEXT("AimAzimuth"), this, &ATank::YawCamera);
 
-	PlayerInputComponent->BindAxis(TEXT("LeftTrackThrottle"), this, &ATank::LeftTrackThrottle);
-	PlayerInputComponent->BindAxis(TEXT("RightTrackThrottle"), this, &ATank::RightTrackThrottle);
+	//PlayerInputComponent->BindAxis(TEXT("LeftTrackThrottle"), this, &ATank::LeftTrackThrottle);
+	//PlayerInputComponent->BindAxis(TEXT("RightTrackThrottle"), this, &ATank::RightTrackThrottle);
 
 	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &ATank::MoveForward);
 
@@ -93,6 +91,8 @@ void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Pressed, this, &ATank::StartFire);
 
+	PlayerInputComponent->BindAction(TEXT("SwitchPre"), IE_Pressed, this, &ATank::SwitchPreCannonType);
+	PlayerInputComponent->BindAction(TEXT("SwitchNext"), IE_Pressed, this, &ATank::SwitchNextCannonType);
 }
 
 void ATank::GetLifetimeReplicatedProps(TArray <FLifetimeProperty>& OutLifetimeProps) const
@@ -101,6 +101,8 @@ void ATank::GetLifetimeReplicatedProps(TArray <FLifetimeProperty>& OutLifetimePr
 
 	//复制当前生命值。
 	DOREPLIFETIME(ATank, CurrentHealth);
+	DOREPLIFETIME(ATank, CannonTypeIndex);
+
 }
 
 void ATank::AimAt(FVector HitLocation) {
@@ -142,14 +144,6 @@ void ATank::YawCamera(float AxisValue) {
 	AzimuthGimbalRef->SetWorldRotation(NewRotation);
 }
 
-void ATank::LeftTrackThrottle(float AxisValue) {
-	LeftTrack->SetThrottle(AxisValue * CurrentHealth / MaxHealth);
-}
-
-void ATank::RightTrackThrottle(float AxisValue) {
-	RightTrack->SetThrottle(AxisValue * CurrentHealth / MaxHealth);
-}
-
 void ATank::MoveForward(float AxisValue) {
 	//TankMovementComponent->IntendMoveForward(AxisValue * CurrentHealth / MaxHealth);
 	MoveAxisValue = AxisValue * CurrentHealth / MaxHealth;
@@ -161,7 +155,7 @@ void ATank::MoveForwardServer_Implementation(FVector NewLocation) {
 }
 
 void ATank::MoveForwardMulticast_Implementation(FVector NewLocation) {
-	if(GetLocalRole() < ROLE_AutonomousProxy)
+	if (GetLocalRole() < ROLE_AutonomousProxy)
 		SetActorLocation(NewLocation);
 }
 
@@ -180,8 +174,80 @@ void ATank::TurnRightMulticast_Implementation(FRotator NewRotation) {
 		SetActorRotation(NewRotation);
 }
 
-void ATank::StartFire() {
+void ATank::SwitchPreCannonType() {
 	if (bIsFiring) return;
+
+	bIsFiring = true;
+	UWorld* World = GetWorld();
+	check(World != nullptr);
+	World->GetTimerManager().SetTimer(FiringTimer, this, &ATank::StopSwitchPre, FireRate, false);
+	
+	SwitchPreServer();
+
+}
+
+void ATank::StopSwitchPre() {
+	bIsFiring = false;
+}
+
+void ATank::SwitchPreServer_Implementation() {
+	CannonTypeIndex = CannonTypeIndex - 1 < 0 ? 0 : CannonTypeIndex - 1;
+	ChangeCannon();
+}
+
+void ATank::SwitchNextCannonType() {
+	//UE_LOG(LogTemp, Warning, TEXT("SwitchNextCannonType()"));
+
+	if (bIsFiring) return;
+
+	bIsFiring = true;
+	UWorld* World = GetWorld();
+	check(World != nullptr);
+	World->GetTimerManager().SetTimer(FiringTimer, this, &ATank::StopSwitchNext, FireRate, false);
+
+	SwitchNextServer();
+}
+
+void ATank::StopSwitchNext() {
+	bIsFiring = false;
+}
+
+void ATank::SwitchNextServer_Implementation() {
+	//UE_LOG(LogTemp, Warning, TEXT("SwitchNextServer()"));
+	CannonTypeIndex = CannonTypeIndex + 1 >= CannonTypes.Num() ? CannonTypes.Num() - 1 : CannonTypeIndex + 1;
+	ChangeCannon();
+}
+
+void ATank::OnRep_CannonTypeIndex() {
+	if (GetLocalRole() == ROLE_AutonomousProxy) {
+		if (GEngine) {
+			FString str = FString::Printf(TEXT("cannon %d have %d left"), CannonTypeIndex, CannonTypes[CannonTypeIndex]);
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, str);
+			
+		}
+
+	}
+	ChangeCannon();
+}
+
+void ATank::ChangeCannon() {
+	AProjectile* Cannon = CannonBlueprintArray[CannonTypeIndex].GetDefaultObject();
+	if (Cannon) {
+		LaunchSpeed = Cannon->Speed;
+	}
+}
+
+void ATank::ReduceCannonNum() {
+	CannonTypes[CannonTypeIndex] -= 1;
+}
+
+void ATank::ReduceCannonNumMulticast_Implementation() {
+	ReduceCannonNum();
+}
+
+
+void ATank::StartFire() {
+	if (bIsFiring || CannonTypes[CannonTypeIndex] <= 0) return;
 
 	bIsFiring = true;
 	UWorld* World = GetWorld();
@@ -198,6 +264,7 @@ void ATank::StopFire() {
 
 void ATank::HandleFire_Implementation() {
 	//UE_LOG(LogTemp, Warning, TEXT("Tank Fire !!!") );
+	ReduceCannonNumMulticast();
 
 	check(Barrel != nullptr);
 
@@ -210,7 +277,7 @@ void ATank::HandleFire_Implementation() {
 	spawnParameters.Owner = this;
 
 	check(GetWorld() != nullptr);
-	AProjectile* spawnedProjectile = GetWorld()->SpawnActor<AProjectile>(ProjectileBlueprint, spawnLocation, spawnRotation, spawnParameters);
+	AProjectile* spawnedProjectile = GetWorld()->SpawnActor<AProjectile>(CannonBlueprintArray[CannonTypeIndex]/*ProjectileBlueprint*/, spawnLocation, spawnRotation, spawnParameters);
 	//spawnedProjectile->Launch(LaunchSpeed);
 }
 
@@ -257,6 +324,26 @@ float ATank::TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEven
 	float TrueDamage = DamageTaken - Defence > 0 ? DamageTaken - Defence : DamageTaken / 4;
 	float damageApplied = CurrentHealth - TrueDamage;
 	SetCurrentHealth(damageApplied);
+	
 	return damageApplied;
+}
+
+void ATank::AddCannonServer(int32 index, int32 Num) {
+	UE_LOG(LogTemp, Warning, TEXT("AddCannonServer(), TypeName : %d, Num : %d"), index, Num);
+
+	AddCannonMulticast(index, Num);
+}
+
+void ATank::AddCannonMulticast_Implementation(int32 index, int32 Num) {
+	//if(GEngine)
+	//	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, TEXT("AddCannonMulticast()"));
+	if (index < 0 && CannonTypes.Num() <= index) return;
+
+	CannonTypes[index] += Num;
+	
+	if (GetLocalRole() == ROLE_AutonomousProxy) {
+		FString str = FString::Printf(TEXT("Left Cannon : %d"), CannonTypes[index]);
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, str);
+	}
 }
 

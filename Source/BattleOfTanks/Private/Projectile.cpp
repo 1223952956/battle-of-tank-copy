@@ -20,10 +20,12 @@ AProjectile::AProjectile()
 
 	bReplicates = true;
 
+	//SetLifeSpan(3.0f);
+
 	DamageType = UDamageType::StaticClass();
 	Damage = 10.0f;
 
-	Speed = 10000.0f;
+	//Speed = 10000.0f;
 
 	//创建碰撞组件并设为根组件
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComponent"));
@@ -62,7 +64,7 @@ AProjectile::AProjectile()
 
 	//创建子弹运动组件
 	ProjectileMovementComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
-	ProjectileMovementComp->InitialSpeed = Speed;
+	//ProjectileMovementComp->InitialSpeed = Speed;
 	//ProjectileMovementComp->SetVelocityInLocalSpace(FVector::ForwardVector *);
 	ProjectileMovementComp->SetUpdatedComponent(RootComponent);
 	ProjectileMovementComp->MaxSpeed = 100000.0f;
@@ -88,6 +90,10 @@ void AProjectile::BeginPlay()
 		CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnProjectileOverlapPawn);
 		CollisionComp->OnComponentHit.AddDynamic(this, &AProjectile::OnProjectileHitGround);
 	}
+	UE_LOG(LogTemp, Warning, TEXT("Projectile velocity : %s"), *(Speed * GetActorForwardVector()).ToString());
+	//ProjectileMovementComp->Velocity = Speed * GetActorForwardVector();
+	//ProjectileMovementComp->SetVelocityInLocalSpace(Speed * GetActorForwardVector());
+	SetLifeSpan(3.0f);
 }
 
 // Called every frame
@@ -95,6 +101,7 @@ void AProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	UE_LOG(LogTemp, Warning, TEXT("Projectile position : %s"), *GetActorLocation().ToString());
 }
 
 void AProjectile::Destroyed()

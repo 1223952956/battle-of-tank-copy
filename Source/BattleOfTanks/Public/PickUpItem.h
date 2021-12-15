@@ -45,7 +45,11 @@ public:
 	virtual void OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Identify")
-	FString Name;
+	int32 TypeNum;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Properties")
+	bool bRotate;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Properties")
+	float RotationRate;
 };

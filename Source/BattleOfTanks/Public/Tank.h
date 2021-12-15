@@ -42,10 +42,6 @@ protected:
 
 	void YawCamera(float AxisValue);
 
-	void LeftTrackThrottle(float AxisValue);
-
-	void RightTrackThrottle(float AxisValue);
-
 	void MoveForward(float AxisValue);
 
 	void TurnRight(float AxisValue);
@@ -57,6 +53,8 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Setup")
 	TSubclassOf<AProjectile> ProjectileBlueprint;
+
+
 
 	UFUNCTION(BlueprintCallable, Category = "Setup")
 	void SetBarrelAndTurretReference(UTankBarrelStaticMeshComponent* BarrelToSet, UTankTurretStaticMeshComponent* TurretToSet);
@@ -97,6 +95,9 @@ private:
 //开火
 public:
 	UPROPERTY(EditDefaultsOnly, Category = "Fire")
+	TArray<TSubclassOf<AProjectile>> CannonBlueprintArray;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Fire")
 	UParticleSystem* FireParticleSystem;
 
 	//子弹速率(不确定)
@@ -120,6 +121,52 @@ public:
 
 	//用于生成射击间隔的计时器
 	FTimerHandle FiringTimer;
+
+//弹药
+private:
+	//存放弹药种类和相应的个数
+	UPROPERTY(EditDefaultsOnly, Category = "Cannon")
+	TArray<int32> CannonTypes;
+
+	UPROPERTY(EditDefaultsOnly, ReplicatedUsing = OnRep_CannonTypeIndex, Category = "Cannon")
+	int32 CannonTypeIndex;
+
+
+public:
+	//添加弹药函数, 由可拾取物调用
+	UFUNCTION(/*Server, Reliable*/)
+	void AddCannonServer(int32 index, int32 Num);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void AddCannonMulticast(int32 index, int32 Num);
+
+
+	void SwitchPreCannonType();
+
+	void StopSwitchPre();
+
+	UFUNCTION(Server, Reliable)
+	void SwitchPreServer();
+
+	void SwitchNextCannonType();
+
+	void StopSwitchNext();
+
+	UFUNCTION(Server, Reliable)
+	void SwitchNextServer();
+
+	UFUNCTION()
+	void OnRep_CannonTypeIndex();
+
+	void ChangeCannon();
+
+	void ReduceCannonNum();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void ReduceCannonNumMulticast();
+
+	//UFUNCTION(BlueprintCallable, Category = "Cannon")
+	//int32 GetCurrentCannonNum();
 
 //血量
 public:
