@@ -14,6 +14,7 @@
 #include "Components/SphereComponent.h"
 #include "Particles/ParticleSystem.h"
 #include "Kismet/GameplayStatics.h"
+#include "Shield.h"
 
 // Sets default values
 ATank::ATank()
@@ -32,10 +33,15 @@ ATank::ATank()
 	FireRate = 1.0f;
 	bIsFiring = false;
 
-	MaxHealth = 100.0f;
+	MaxHealth = 500.0f;
 	CurrentHealth = MaxHealth;
 
 	Defence = 5.0f;
+	MaxShieldSlotNum = 2;
+	for (int32 i = 0; i < MaxShieldSlotNum; ++i) {
+		ShieldSlots.Add(nullptr);
+	}
+
 
 	MaxMoveSpeed = 1000.0f;
 	MaxTurnSpeed = 30.0f;
@@ -44,6 +50,10 @@ ATank::ATank()
 
 	//Ä¬ÈÏai¿ØÖÆÀà
 	AIControllerClass = ATankAIController::StaticClass();
+
+	ShieldClass = AShield::StaticClass();
+
+	
 }
 
 // Called when the game starts or when spawned
@@ -93,6 +103,9 @@ void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 	PlayerInputComponent->BindAction(TEXT("SwitchPre"), IE_Pressed, this, &ATank::SwitchPreCannonType);
 	PlayerInputComponent->BindAction(TEXT("SwitchNext"), IE_Pressed, this, &ATank::SwitchNextCannonType);
+
+	PlayerInputComponent->BindAction(TEXT("EquipShield"), IE_Pressed, this, &ATank::EquipShield);
+	PlayerInputComponent->BindAction(TEXT("UnloadShield"), IE_Pressed, this, &ATank::UnloadShield);
 }
 
 void ATank::GetLifetimeReplicatedProps(TArray <FLifetimeProperty>& OutLifetimeProps) const
@@ -180,19 +193,10 @@ void ATank::SwitchPreCannonType() {
 	bIsFiring = true;
 	UWorld* World = GetWorld();
 	check(World != nullptr);
-	World->GetTimerManager().SetTimer(FiringTimer, this, &ATank::StopSwitchPre, FireRate, false);
+	World->GetTimerManager().SetTimer(FiringTimer, this, &ATank::StopFire, FireRate, false);
 	
 	SwitchPreServer();
 
-}
-
-void ATank::StopSwitchPre() {
-	bIsFiring = false;
-}
-
-void ATank::SwitchPreServer_Implementation() {
-	CannonTypeIndex = CannonTypeIndex - 1 < 0 ? 0 : CannonTypeIndex - 1;
-	ChangeCannon();
 }
 
 void ATank::SwitchNextCannonType() {
@@ -203,14 +207,17 @@ void ATank::SwitchNextCannonType() {
 	bIsFiring = true;
 	UWorld* World = GetWorld();
 	check(World != nullptr);
-	World->GetTimerManager().SetTimer(FiringTimer, this, &ATank::StopSwitchNext, FireRate, false);
+	World->GetTimerManager().SetTimer(FiringTimer, this, &ATank::StopFire, FireRate, false);
 
 	SwitchNextServer();
 }
 
-void ATank::StopSwitchNext() {
-	bIsFiring = false;
+void ATank::SwitchPreServer_Implementation() {
+	CannonTypeIndex = CannonTypeIndex - 1 < 0 ? 0 : CannonTypeIndex - 1;
+	ChangeCannon();
 }
+
+
 
 void ATank::SwitchNextServer_Implementation() {
 	//UE_LOG(LogTemp, Warning, TEXT("SwitchNextServer()"));
@@ -276,8 +283,9 @@ void ATank::HandleFire_Implementation() {
 	spawnParameters.Instigator = GetInstigator();
 	spawnParameters.Owner = this;
 
-	check(GetWorld() != nullptr);
-	AProjectile* spawnedProjectile = GetWorld()->SpawnActor<AProjectile>(CannonBlueprintArray[CannonTypeIndex]/*ProjectileBlueprint*/, spawnLocation, spawnRotation, spawnParameters);
+	UWorld* World = GetWorld();
+	check(World != nullptr);
+	AProjectile* spawnedProjectile = World->SpawnActor<AProjectile>(CannonBlueprintArray[CannonTypeIndex]/*ProjectileBlueprint*/, spawnLocation, spawnRotation, spawnParameters);
 	//spawnedProjectile->Launch(LaunchSpeed);
 }
 
@@ -347,3 +355,33 @@ void ATank::AddCannonMulticast_Implementation(int32 index, int32 Num) {
 	}
 }
 
+
+void ATank::EquipShield() {
+	if (ShieldSlot_1) {
+		ShieldSlot_1->Equip();
+		return;
+	}
+
+	//UE_LOG(LogTemp, Warning, TEXT("ATank::EquipShield()"));
+
+	UWorld* World = GetWorld();
+	check(World != nullptr);
+
+	FActorSpawnParameters spawnParameters;
+	spawnParameters.Instigator = GetInstigator();
+	spawnParameters.Owner = this;
+
+	FVector SpawnLocation = GetActorLocation() + FVector::ForwardVector * 100;
+	FRotator SpawnRotation = FRotator(0,90,0);
+
+	ShieldSlot_1 = World->SpawnActor<AShield>(ShieldClass, SpawnLocation, SpawnRotation, spawnParameters);
+	ShieldSlot_1->AttachToTank(this);
+	ShieldSlot_1->Equip();
+
+}
+
+void ATank::UnloadShield() {
+	//UE_LOG(LogTemp, Warning, TEXT("ATank::UnloadShield()"));
+	if (!ShieldSlot_1) return;
+	ShieldSlot_1->UnEquip();
+}

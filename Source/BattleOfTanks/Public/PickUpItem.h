@@ -52,4 +52,7 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Properties")
 	float RotationRate;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Properties")
+	int32 Amount;
 };

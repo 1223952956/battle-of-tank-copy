@@ -10,6 +10,7 @@
 #include "Particles/ParticleSystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Tank.h"
 #include "Engine/Engine.h"
 
 // Sets default values
@@ -64,11 +65,13 @@ AProjectile::AProjectile()
 
 	//创建子弹运动组件
 	ProjectileMovementComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
-	//ProjectileMovementComp->InitialSpeed = Speed;
+	UE_LOG(LogTemp, Warning, TEXT("Speed in constructor : %f"), Speed);
+	ProjectileMovementComp->InitialSpeed = Speed;
 	//ProjectileMovementComp->SetVelocityInLocalSpace(FVector::ForwardVector *);
 	ProjectileMovementComp->SetUpdatedComponent(RootComponent);
 	ProjectileMovementComp->MaxSpeed = 100000.0f;
 	ProjectileMovementComp->bRotationFollowsVelocity = true;
+	ProjectileMovementComp->bShouldBounce = false;
 	ProjectileMovementComp->ProjectileGravityScale = 0.0f;
 	//ProjectileMovementComp->bAutoActivate = false;
 
@@ -90,6 +93,7 @@ void AProjectile::BeginPlay()
 		CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnProjectileOverlapPawn);
 		CollisionComp->OnComponentHit.AddDynamic(this, &AProjectile::OnProjectileHitGround);
 	}
+	UE_LOG(LogTemp, Warning, TEXT("Speed in BeginPlay() : %f"), Speed);
 	UE_LOG(LogTemp, Warning, TEXT("Projectile velocity : %s"), *(Speed * GetActorForwardVector()).ToString());
 	//ProjectileMovementComp->Velocity = Speed * GetActorForwardVector();
 	//ProjectileMovementComp->SetVelocityInLocalSpace(Speed * GetActorForwardVector());
@@ -101,7 +105,7 @@ void AProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	UE_LOG(LogTemp, Warning, TEXT("Projectile position : %s"), *GetActorLocation().ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("Projectile position : %s"), *GetActorLocation().ToString());
 }
 
 void AProjectile::Destroyed()
@@ -113,10 +117,18 @@ void AProjectile::Destroyed()
 void AProjectile::OnProjectileOverlapPawn(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Hit Pawn !!!"));
-	if (OtherActor)
+	if (OtherActor && OtherActor->IsA(ATank::StaticClass()))
 	{
 		UGameplayStatics::ApplyDamage(OtherActor, Damage, GetInstigator()->Controller, this, DamageType);
-		//OtherComp->AddImpulseAtLocation(ProjectileMovementComp->Velocity, SweepResult.ImpactPoint);
+
+		//if (OtherComp) {
+		//	UE_LOG(LogTemp, Warning, TEXT("Velocity : %s"), *ProjectileMovementComp->Velocity.ToString());
+		//	OtherComp->AddImpulseAtLocation(ProjectileMovementComp->Velocity, SweepResult.ImpactPoint);
+		//	OtherComp->AddForceAtLocation(ProjectileMovementComp->Velocity * 300000.0f, SweepResult.ImpactPoint);
+		//
+		//}
+
+			
 	}
 
 	Destroy();

@@ -39,7 +39,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Components")
 	UStaticMeshComponent* StaticMeshComp;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Components")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Components")
 	UProjectileMovementComponent* ProjectileMovementComp;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Effects")
@@ -48,7 +48,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Damage")
 	TSubclassOf<UDamageType> DamageType;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Speed")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite ,Category = "Speed")
 	float Speed;
 	//void Launch(float LaunchSpeed);
 

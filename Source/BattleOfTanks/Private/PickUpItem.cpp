@@ -31,6 +31,8 @@ APickUpItem::APickUpItem()
 
 	bRotate = false;
 	RotationRate = 45.0f;
+
+	Amount = 1;
 }
 
 // Called when the game starts or when spawned
@@ -65,7 +67,7 @@ void APickUpItem::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActo
 		if (GetLocalRole() == ROLE_Authority) {
 			ATank* OtherTank = Cast<ATank>(OtherActor);
 			if (OtherTank) {
-				OtherTank->AddCannonServer(TypeNum, 1);
+				OtherTank->AddCannonServer(TypeNum, Amount);
 			}
 			Destroy();
 		}

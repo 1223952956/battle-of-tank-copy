@@ -13,6 +13,7 @@ class AProjectile;
 class UTankTrackStaticMeshComponent;
 class UTankMovementComponent;
 class USphereComponent;
+class AShield;
 
 UCLASS()
 class BATTLEOFTANKS_API ATank : public APawn
@@ -36,7 +37,7 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-//输入
+//基本输入
 protected:
 	void PitchCamera(float AxisValue);
 
@@ -140,17 +141,17 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void AddCannonMulticast(int32 index, int32 Num);
 
+	
 
 	void SwitchPreCannonType();
+	void SwitchNextCannonType();
 
-	void StopSwitchPre();
+	void StartSwitchCannon(int SwitchNum);
 
 	UFUNCTION(Server, Reliable)
 	void SwitchPreServer();
 
-	void SwitchNextCannonType();
 
-	void StopSwitchNext();
 
 	UFUNCTION(Server, Reliable)
 	void SwitchNextServer();
@@ -176,8 +177,7 @@ public:
 	UPROPERTY(ReplicatedUsing = OnRep_CurrentHealth)
 	float CurrentHealth;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Health")
-	float Defence;
+
 
 	UFUNCTION()
 	void OnRep_CurrentHealth();
@@ -218,5 +218,31 @@ protected:
 
 	UFUNCTION(NetMulticast, Unreliable)
 	void TurnRightMulticast(FRotator NewRotation);
+
+
+//护盾
+public:
+	UPROPERTY(EditDefaultsOnly, Category = "Defence")
+	float Defence;
+
+	UPROPERTY(EditAnywhere, Category = "Defence")
+	TArray<AShield*> ShieldSlots;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Defence")
+	int32 MaxShieldSlotNum;
+
+	AShield* ShieldSlot_1;
+
+	AShield* ShieldSlot_2;
+
+protected:
+	void EquipShield();
+
+	void UnloadShield();
+
+private:
+	UPROPERTY(EditDefaultsOnly, Category = "Defence")
+	TSubclassOf<AShield> ShieldClass;
+
 
 };
