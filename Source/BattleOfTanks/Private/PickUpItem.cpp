@@ -60,7 +60,7 @@ void APickUpItem::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActo
 	if (OtherComp != nullptr && OtherComp->GetName() == TEXT("Tank")) {
 		UE_LOG(LogTemp, Warning, TEXT("OnOverlapBegin()"));
 		
-		if (OverlapParticles && GetLocalRole() < ROLE_Authority) {
+		if (OverlapParticles/* && GetLocalRole() < ROLE_Authority*/) {
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), OverlapParticles, GetActorLocation(), FRotator(0.0f), true);
 		}
 

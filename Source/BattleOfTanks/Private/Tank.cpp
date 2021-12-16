@@ -188,20 +188,33 @@ void ATank::TurnRightMulticast_Implementation(FRotator NewRotation) {
 }
 
 void ATank::SwitchPreCannonType() {
-	if (bIsFiring) return;
+	//if (bIsFiring) return;
 
-	bIsFiring = true;
-	UWorld* World = GetWorld();
-	check(World != nullptr);
-	World->GetTimerManager().SetTimer(FiringTimer, this, &ATank::StopFire, FireRate, false);
-	
-	SwitchPreServer();
+	//bIsFiring = true;
+	//UWorld* World = GetWorld();
+	//check(World != nullptr);
+	//World->GetTimerManager().SetTimer(FiringTimer, this, &ATank::StopFire, FireRate, false);
+	//
+	//SwitchPreServer();
+	StartSwitch(-1);
 
 }
 
 void ATank::SwitchNextCannonType() {
 	//UE_LOG(LogTemp, Warning, TEXT("SwitchNextCannonType()"));
 
+	//if (bIsFiring) return;
+
+	//bIsFiring = true;
+	//UWorld* World = GetWorld();
+	//check(World != nullptr);
+	//World->GetTimerManager().SetTimer(FiringTimer, this, &ATank::StopFire, FireRate, false);
+
+	//SwitchNextServer();
+	StartSwitch(1);
+}
+
+void ATank::StartSwitch(int SwitchNum) {
 	if (bIsFiring) return;
 
 	bIsFiring = true;
@@ -209,21 +222,32 @@ void ATank::SwitchNextCannonType() {
 	check(World != nullptr);
 	World->GetTimerManager().SetTimer(FiringTimer, this, &ATank::StopFire, FireRate, false);
 
-	SwitchNextServer();
+	SwitchServer(SwitchNum);
 }
 
-void ATank::SwitchPreServer_Implementation() {
-	CannonTypeIndex = CannonTypeIndex - 1 < 0 ? 0 : CannonTypeIndex - 1;
+void ATank::SwitchServer_Implementation(int SwitchNum) {
+	int NewIndex = CannonTypeIndex + SwitchNum;
+	if (NewIndex < 0) {
+		NewIndex = CannonTypes.Num() + NewIndex;
+	}
+	NewIndex = NewIndex % CannonTypes.Num();
+	CannonTypeIndex = NewIndex;
 	ChangeCannon();
+
 }
 
-
-
-void ATank::SwitchNextServer_Implementation() {
-	//UE_LOG(LogTemp, Warning, TEXT("SwitchNextServer()"));
-	CannonTypeIndex = CannonTypeIndex + 1 >= CannonTypes.Num() ? CannonTypes.Num() - 1 : CannonTypeIndex + 1;
-	ChangeCannon();
-}
+//void ATank::SwitchPreServer_Implementation() {
+//	CannonTypeIndex = CannonTypeIndex - 1 < 0 ? 0 : CannonTypeIndex - 1;
+//	ChangeCannon();
+//}
+//
+//
+//
+//void ATank::SwitchNextServer_Implementation() {
+//	//UE_LOG(LogTemp, Warning, TEXT("SwitchNextServer()"));
+//	CannonTypeIndex = CannonTypeIndex + 1 >= CannonTypes.Num() ? CannonTypes.Num() - 1 : CannonTypeIndex + 1;
+//	ChangeCannon();
+//}
 
 void ATank::OnRep_CannonTypeIndex() {
 	if (GetLocalRole() == ROLE_AutonomousProxy) {

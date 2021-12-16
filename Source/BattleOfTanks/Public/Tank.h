@@ -146,15 +146,15 @@ public:
 	void SwitchPreCannonType();
 	void SwitchNextCannonType();
 
-	void StartSwitchCannon(int SwitchNum);
+	void StartSwitch(int SwitchNum);
 
 	UFUNCTION(Server, Reliable)
-	void SwitchPreServer();
+	void SwitchServer(int SwitchNum);
 
-
-
-	UFUNCTION(Server, Reliable)
-	void SwitchNextServer();
+	//UFUNCTION(Server, Reliable)
+	//void SwitchPreServer();
+	//UFUNCTION(Server, Reliable)
+	//void SwitchNextServer();
 
 	UFUNCTION()
 	void OnRep_CannonTypeIndex();
