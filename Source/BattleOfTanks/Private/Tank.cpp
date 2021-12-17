@@ -37,11 +37,12 @@ ATank::ATank()
 	CurrentHealth = MaxHealth;
 
 	Defence = 5.0f;
-	MaxShieldSlotNum = 2;
-	for (int32 i = 0; i < MaxShieldSlotNum; ++i) {
-		ShieldSlots.Add(nullptr);
-	}
 
+	MaxShieldSlotNum = 2;
+	ShieldSlots.Init(nullptr, MaxShieldSlotNum);
+
+	MaxShieldStorageNum = 8;
+	ShieldStoraged.Init(nullptr, MaxShieldStorageNum);
 
 	MaxMoveSpeed = 1000.0f;
 	MaxTurnSpeed = 30.0f;
@@ -70,7 +71,7 @@ void ATank::Tick(float DeltaTime)
 
 	if (MoveAxisValue != 0.0f) {
 		FVector NewLocation = GetActorLocation();
-		NewLocation += GetActorForwardVector() * MoveAxisValue * DeltaTime * MaxMoveSpeed;
+		NewLocation += GetActorForwardVector() * MoveAxisValue * DeltaTime  * MaxMoveSpeed;
 		SetActorLocation(NewLocation);
 		MoveForwardServer(NewLocation);
 	}
@@ -78,7 +79,12 @@ void ATank::Tick(float DeltaTime)
 	if (TurnAxisValue != 0.0f) {
 		FRotator NewRotation = GetActorRotation();
 		NewRotation.Yaw += TurnAxisValue * DeltaTime * MaxTurnSpeed;
+		//check(GEngine != nullptr);
+		//FString str = FString::Printf(TEXT("TurnAxisValue : %f,  DeltaTime : %f, MaxTurnSpeed : %f"), TurnAxisValue, DeltaTime, MaxTurnSpeed);
+		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, str);
 		SetActorRotation(NewRotation);
+		//check(GEngine != nullptr);
+		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Trun Right Client"));
 		TurnRightServer(NewRotation);
 	}
 
@@ -88,6 +94,8 @@ void ATank::Tick(float DeltaTime)
 void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	PlayerInputComponent->BindAction(TEXT("TestTrigger"), IE_Pressed, this, &ATank::TestTrigger);
 
 	PlayerInputComponent->BindAxis(TEXT("AimElevation"), this, &ATank::PitchCamera);
 	PlayerInputComponent->BindAxis(TEXT("AimAzimuth"), this, &ATank::YawCamera);
@@ -105,17 +113,32 @@ void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction(TEXT("SwitchNext"), IE_Pressed, this, &ATank::SwitchNextCannonType);
 
 	PlayerInputComponent->BindAction(TEXT("EquipShield"), IE_Pressed, this, &ATank::EquipShield);
-	PlayerInputComponent->BindAction(TEXT("UnloadShield"), IE_Pressed, this, &ATank::UnloadShield);
+	PlayerInputComponent->BindAction(TEXT("UnloadShield"), IE_Pressed, this, &ATank::UnEquipShield);
 }
 
 void ATank::GetLifetimeReplicatedProps(TArray <FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	//复制当前生命值。
+	//复制属性
 	DOREPLIFETIME(ATank, CurrentHealth);
 	DOREPLIFETIME(ATank, CannonTypeIndex);
+	//DOREPLIFETIME(ATank, ShieldSlots);
+	//DOREPLIFETIME(ATank, ShieldStoraged);
+	DOREPLIFETIME(ATank, Defence);
 
+
+}
+
+void ATank::TestTrigger() {
+	UE_LOG(LogTemp, Warning, TEXT("****************************TestTriggerBegin****************************"));
+
+	for (int i = 0; i < ShieldStoraged.Num(); ++i) {
+		FString str = ShieldStoraged[i] == nullptr ? TEXT("Empty") : ShieldStoraged[i]->GetName();
+		UE_LOG(LogTemp, Warning, TEXT("Field %d : %s"), i, *str);
+	}
+
+	//UE_LOG(LogTemp, Warning, TEXT("*****************************TestTriggerEnd*****************************"));
 }
 
 void ATank::AimAt(FVector HitLocation) {
@@ -164,6 +187,7 @@ void ATank::MoveForward(float AxisValue) {
 
 void ATank::MoveForwardServer_Implementation(FVector NewLocation) {
 	SetActorLocation(NewLocation);
+	//UE_LOG(LogTemp, Warning, TEXT("ActorLocation : %s"), *GetActorLocation().ToString());
 	MoveForwardMulticast(NewLocation);
 }
 
@@ -176,8 +200,8 @@ void ATank::TurnRight(float AxisValue) {
 	TurnAxisValue = AxisValue;
 }
 
-
 void ATank::TurnRightServer_Implementation(FRotator NewRotation) {
+	//UE_LOG(LogTemp, Warning, TEXT("TurnRightServer()"));
 	SetActorRotation(NewRotation);
 	TurnRightMulticast(NewRotation);
 }
@@ -292,7 +316,6 @@ void ATank::StopFire() {
 	bIsFiring = false;
 }
 
-
 void ATank::HandleFire_Implementation() {
 	//UE_LOG(LogTemp, Warning, TEXT("Tank Fire !!!") );
 	ReduceCannonNumMulticast();
@@ -379,33 +402,42 @@ void ATank::AddCannonMulticast_Implementation(int32 index, int32 Num) {
 	}
 }
 
-
 void ATank::EquipShield() {
-	if (ShieldSlot_1) {
-		ShieldSlot_1->Equip();
-		return;
-	}
+	if (ShieldSlots[0] || !ShieldStoraged[0]) return;
+
+	ShieldStoraged[0]->Equip(0);
+	//if (ShieldSlot_1) {
+	//	ShieldSlot_1->Equip();
+	//	return;
+	//}
 
 	//UE_LOG(LogTemp, Warning, TEXT("ATank::EquipShield()"));
 
-	UWorld* World = GetWorld();
-	check(World != nullptr);
+	//UWorld* World = GetWorld();
+	//check(World != nullptr);
 
-	FActorSpawnParameters spawnParameters;
-	spawnParameters.Instigator = GetInstigator();
-	spawnParameters.Owner = this;
+	//FActorSpawnParameters spawnParameters;
+	//spawnParameters.Instigator = GetInstigator();
+	//spawnParameters.Owner = this;
 
-	FVector SpawnLocation = GetActorLocation() + FVector::ForwardVector * 100;
-	FRotator SpawnRotation = FRotator(0,90,0);
+	//FVector SpawnLocation = GetActorLocation() + FVector::ForwardVector * 100;
+	//FRotator SpawnRotation = FRotator(0,90,0);
 
-	ShieldSlot_1 = World->SpawnActor<AShield>(ShieldClass, SpawnLocation, SpawnRotation, spawnParameters);
-	ShieldSlot_1->AttachToTank(this);
-	ShieldSlot_1->Equip();
+	//ShieldSlot_1 = World->SpawnActor<AShield>(ShieldClass, SpawnLocation, SpawnRotation, spawnParameters);
+	//ShieldSlot_1->AttachToTank(this);
+	//ShieldSlot_1->Equip();
+
 
 }
 
-void ATank::UnloadShield() {
+void ATank::UnEquipShield() {
 	//UE_LOG(LogTemp, Warning, TEXT("ATank::UnloadShield()"));
-	if (!ShieldSlot_1) return;
-	ShieldSlot_1->UnEquip();
+	//if (!ShieldSlot_1) return;
+	//ShieldSlot_1->UnEquip();
+
 }
+
+void ATank::OnRep_Defence() {
+	UE_LOG(LogTemp, Warning, TEXT("OnRep_Defence()"));
+}
+

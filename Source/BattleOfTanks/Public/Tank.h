@@ -39,6 +39,9 @@ public:
 
 //基本输入
 protected:
+	//UFUNCTION()
+	void TestTrigger();
+
 	void PitchCamera(float AxisValue);
 
 	void YawCamera(float AxisValue);
@@ -222,14 +225,20 @@ protected:
 
 //护盾
 public:
-	UPROPERTY(EditDefaultsOnly, Category = "Defence")
+	UPROPERTY(EditDefaultsOnly, ReplicatedUsing = OnRep_Defence, Category = "Defence")
 	float Defence;
 
-	UPROPERTY(EditAnywhere, Category = "Defence")
+	//UPROPERTY(EditDefaultsOnly, Replicated, Category = "Defence")
 	TArray<AShield*> ShieldSlots;
+
+	//UPROPERTY(EditDefaultsOnly, Replicated, Category = "Defence")
+	TArray<AShield*> ShieldStoraged;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Defence")
 	int32 MaxShieldSlotNum;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Defence")
+	int32 MaxShieldStorageNum;
 
 	AShield* ShieldSlot_1;
 
@@ -238,7 +247,12 @@ public:
 protected:
 	void EquipShield();
 
-	void UnloadShield();
+	void UnEquipShield();
+
+	UFUNCTION()
+	void OnRep_Defence();
+
+	//void OnRep_ShieldSlots();
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Defence")

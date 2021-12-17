@@ -17,6 +17,8 @@ public:
 	// Sets default values for this actor's properties
 	AShield();
 
+	//void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -25,16 +27,15 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void AttachToTank(ATank* InOwnerTank);
+	void AttachToTank(ATank* InOwnerTank, int32 InStorageIndex);
 
 	void UnAttach();
 
-	UFUNCTION(BlueprintCallable)
-	void Equip();
+	//UFUNCTION(Server, Reliable)
+	void Equip(int32 InSlotIndex);
 
-	UFUNCTION(BlueprintCallable)
+	//UFUNCTION(Server, Reliable)
 	void UnEquip();
-
 
 
 protected:
@@ -52,6 +53,10 @@ private:
 
 	bool bIsEquipped;
 
+	//UPROPERTY(Replicated)
 	ATank* OwnerTank;
 
+	int32 SlotIndex;
+
+	int32 StorageIndex;
 };

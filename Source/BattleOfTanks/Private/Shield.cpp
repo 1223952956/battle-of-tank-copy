@@ -1,14 +1,17 @@
+
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Shield.h"
 #include "Tank.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 AShield::AShield()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	//bReplicates = true;
 
 	MaxLifeTime = 3.0f;
 	CurrentLifeTime = MaxLifeTime;
@@ -23,6 +26,12 @@ AShield::AShield()
 	TestMeshComponent->SetCollisionProfileName("NoCollision");
 	RootComponent = TestMeshComponent;
 }
+
+//void AShield::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {
+//	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+//
+//	DOREPLIFETIME(AShield, OwnerTank);
+//}
 
 // Called when the game starts or when spawned
 void AShield::BeginPlay()
@@ -47,26 +56,30 @@ void AShield::Tick(float DeltaTime)
 
 }
 
-void AShield::AttachToTank(ATank* InOwnerTank) {
+void AShield::AttachToTank(ATank* InOwnerTank, int32 InStorageIndex) {
 	check(InOwnerTank != nullptr);
 
 	OwnerTank = InOwnerTank;
+	StorageIndex = InStorageIndex;
 }
 
 void AShield::UnAttach() {
-	if (!OwnerTank) return;
-	OwnerTank->ShieldSlot_1 = nullptr;
+	OwnerTank->ShieldStoraged[StorageIndex] = nullptr;
 }
 
-void AShield::Equip() {
+void AShield::Equip(int32 InSlotIndex) {
 	if (!OwnerTank || bIsEquipped) return;
 	
+	SlotIndex = InSlotIndex;
+	OwnerTank->ShieldSlots[SlotIndex] = this;
+
 	OwnerTank->Defence += DefenceValue;
 	bIsEquipped = true;
 
-	FString str = FString::Printf(TEXT("Tank have %f defence now"), OwnerTank->Defence);
-	check(GEngine != nullptr);
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, str);
+	//FString str = FString::Printf(TEXT("Tank have %f defence now"), OwnerTank->Defence);
+	//check(GEngine != nullptr);
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, str);
+	UE_LOG(LogTemp, Warning, TEXT("Tank have %f defence now"), OwnerTank->Defence);
 }
 
 void AShield::UnEquip() {
@@ -75,8 +88,11 @@ void AShield::UnEquip() {
 	OwnerTank->Defence -= DefenceValue;
 	bIsEquipped = false;
 
-	FString str = FString::Printf(TEXT("Tank have %f defence now"), OwnerTank->Defence);
-	check(GEngine != nullptr);
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, str);
+	OwnerTank->ShieldSlots[SlotIndex] = nullptr;
+
+	//FString str = FString::Printf(TEXT("Tank have %f defence now"), OwnerTank->Defence);
+	//check(GEngine != nullptr);
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, str);
+	UE_LOG(LogTemp, Warning, TEXT("Tank have %f defence now"), OwnerTank->Defence);
 }
 

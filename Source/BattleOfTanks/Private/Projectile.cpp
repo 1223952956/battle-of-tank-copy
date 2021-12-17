@@ -65,7 +65,7 @@ AProjectile::AProjectile()
 
 	//创建子弹运动组件
 	ProjectileMovementComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
-	UE_LOG(LogTemp, Warning, TEXT("Speed in constructor : %f"), Speed);
+	//UE_LOG(LogTemp, Warning, TEXT("Speed in constructor : %f"), Speed);
 	ProjectileMovementComp->InitialSpeed = Speed;
 	//ProjectileMovementComp->SetVelocityInLocalSpace(FVector::ForwardVector *);
 	ProjectileMovementComp->SetUpdatedComponent(RootComponent);
@@ -93,8 +93,8 @@ void AProjectile::BeginPlay()
 		CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnProjectileOverlapPawn);
 		CollisionComp->OnComponentHit.AddDynamic(this, &AProjectile::OnProjectileHitGround);
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Speed in BeginPlay() : %f"), Speed);
-	UE_LOG(LogTemp, Warning, TEXT("Projectile velocity : %s"), *(Speed * GetActorForwardVector()).ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("Speed in BeginPlay() : %f"), Speed);
+	//UE_LOG(LogTemp, Warning, TEXT("Projectile velocity : %s"), *(Speed * GetActorForwardVector()).ToString());
 	//ProjectileMovementComp->Velocity = Speed * GetActorForwardVector();
 	//ProjectileMovementComp->SetVelocityInLocalSpace(Speed * GetActorForwardVector());
 	SetLifeSpan(3.0f);
@@ -116,7 +116,7 @@ void AProjectile::Destroyed()
 
 void AProjectile::OnProjectileOverlapPawn(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Hit Pawn !!!"));
+	//UE_LOG(LogTemp, Warning, TEXT("Hit Pawn !!!"));
 	if (OtherActor && OtherActor->IsA(ATank::StaticClass()))
 	{
 		UGameplayStatics::ApplyDamage(OtherActor, Damage, GetInstigator()->Controller, this, DamageType);
@@ -135,7 +135,7 @@ void AProjectile::OnProjectileOverlapPawn(UPrimitiveComponent* OverlappedComp, A
 }
 
 void AProjectile::OnProjectileHitGround(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) {
-	UE_LOG(LogTemp, Warning, TEXT("Hit Ground !!!"));
+	//UE_LOG(LogTemp, Warning, TEXT("Hit Ground !!!"));
 	Destroy();
 }
 

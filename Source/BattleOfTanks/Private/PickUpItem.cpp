@@ -32,7 +32,7 @@ APickUpItem::APickUpItem()
 	bRotate = false;
 	RotationRate = 45.0f;
 
-	Amount = 1;
+	//Amount = 1;
 }
 
 // Called when the game starts or when spawned
@@ -40,6 +40,7 @@ void APickUpItem::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	check(CollisionComp != nullptr);
 	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &APickUpItem::OnOverlapBegin);
 	CollisionComp->OnComponentEndOverlap.AddDynamic(this, &APickUpItem::OnOverlapEnd);
 }
@@ -57,28 +58,9 @@ void APickUpItem::Tick(float DeltaTime)
 }
 
 void APickUpItem::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
-	if (OtherComp != nullptr && OtherComp->GetName() == TEXT("Tank")) {
-		UE_LOG(LogTemp, Warning, TEXT("OnOverlapBegin()"));
-		
-		if (OverlapParticles/* && GetLocalRole() < ROLE_Authority*/) {
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), OverlapParticles, GetActorLocation(), FRotator(0.0f), true);
-		}
-
-		if (GetLocalRole() == ROLE_Authority) {
-			ATank* OtherTank = Cast<ATank>(OtherActor);
-			if (OtherTank) {
-				OtherTank->AddCannonServer(TypeNum, Amount);
-			}
-			Destroy();
-		}
-		
-	}
 	
 }
 
 void APickUpItem::OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) {
-	if (OtherComp != nullptr && OtherComp->GetName() == TEXT("Tank")) {
-		UE_LOG(LogTemp, Warning, TEXT("OnOverlapEnd()"));
-	}
 	
 }

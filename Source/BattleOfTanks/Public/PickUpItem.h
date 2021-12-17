@@ -34,6 +34,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Component")
 	UParticleSystem* OverlapParticles;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Properties")
+	bool bRotate;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Properties")
+	float RotationRate;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -43,16 +49,5 @@ public:
 
 	UFUNCTION()
 	virtual void OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-private:
-	UPROPERTY(EditDefaultsOnly, Category = "Identify")
-	int32 TypeNum;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Properties")
-	bool bRotate;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Properties")
-	float RotationRate;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Properties")
-	int32 Amount;
 };
