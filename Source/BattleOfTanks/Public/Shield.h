@@ -37,16 +37,20 @@ public:
 	//UFUNCTION(Server, Reliable)
 	void UnEquip();
 
+	UPROPERTY(BlueprintReadWrite, Category = "Properties")
+	float CurrentLifeTime;
 
-protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Component")
-	UStaticMeshComponent* TestMeshComponent;
-
-private:
-	UPROPERTY(EditDefaultsOnly, Category = "Properties")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Properties")
 	float MaxLifeTime;
 
-	float CurrentLifeTime;
+protected:
+	//UPROPERTY(EditDefaultsOnly, Category = "Component")
+	//UStaticMeshComponent* TestMeshComponent;
+
+private:
+	
+
+
 
 	UPROPERTY(EditDefaultsOnly, Category = "Properties")
 	float DefenceValue;

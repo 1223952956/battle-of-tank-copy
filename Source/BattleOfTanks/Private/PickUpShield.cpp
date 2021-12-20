@@ -10,7 +10,7 @@
 
 APickUpShield::APickUpShield() {
 
-	ShieldClass = AShield::StaticClass();
+	//ShieldClass = AShield::StaticClass();
 }
 
 //void APickUpShield::BeginPlay() {
@@ -37,7 +37,6 @@ void APickUpShield::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AAc
 			check(World != nullptr);
 			AShield* Shield = World->SpawnActor<AShield>(ShieldClass);
 
-			OverlapTank->ShieldStoraged[i] = Shield;
 			Shield->AttachToTank(OverlapTank, i);
 			if (GetLocalRole() == ROLE_Authority) {
 				Destroy();

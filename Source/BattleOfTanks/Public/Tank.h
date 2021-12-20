@@ -10,10 +10,10 @@ class UTankAimingComponent;
 class UTankBarrelStaticMeshComponent;
 class UTankTurretStaticMeshComponent;
 class AProjectile;
-class UTankTrackStaticMeshComponent;
 class UTankMovementComponent;
 class USphereComponent;
 class AShield;
+class UWidgetComponent;
 
 UCLASS()
 class BATTLEOFTANKS_API ATank : public APawn
@@ -67,8 +67,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Setup")
 	void SetCameraReference(USceneComponent* AzimuthGimbalToSet, USceneComponent* SpringArmToSet);
 
-	UFUNCTION(BlueprintCallable, Category = "Setup")
-	void SetTrackReference(UTankTrackStaticMeshComponent* LeftTrackToSet, UTankTrackStaticMeshComponent* RightTrackToSet);
 
 //组件
 protected:
@@ -90,11 +88,6 @@ private:
 	//本地炮管指针
 	UTankBarrelStaticMeshComponent* Barrel;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Track")
-	UTankTrackStaticMeshComponent* LeftTrack;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Track")
-	UTankTrackStaticMeshComponent* RightTrack;
 
 //开火
 public:
@@ -174,10 +167,10 @@ public:
 
 //血量
 public:
-	UPROPERTY(EditDefaultsOnly, Category = "Health")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Health")
 	float MaxHealth;
 
-	UPROPERTY(ReplicatedUsing = OnRep_CurrentHealth)
+	UPROPERTY(BlueprintReadWrite, ReplicatedUsing = OnRep_CurrentHealth)
 	float CurrentHealth;
 
 
@@ -228,10 +221,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, ReplicatedUsing = OnRep_Defence, Category = "Defence")
 	float Defence;
 
-	//UPROPERTY(EditDefaultsOnly, Replicated, Category = "Defence")
+	UFUNCTION(Server, Reliable)
+	void ChangeDefenceServer(float InNum);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Defence")
 	TArray<AShield*> ShieldSlots;
 
-	//UPROPERTY(EditDefaultsOnly, Replicated, Category = "Defence")
+	UPROPERTY(BlueprintReadOnly, Category = "Defence")
 	TArray<AShield*> ShieldStoraged;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Defence")
@@ -240,9 +236,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Defence")
 	int32 MaxShieldStorageNum;
 
-	AShield* ShieldSlot_1;
+	void InputChangeShieldSlot();
 
-	AShield* ShieldSlot_2;
+	void InputSwitchPreShield();
+	void InputSwitchNextShield();
+	//AShield* ShieldSlot_1;
+
+	//AShield* ShieldSlot_2;
 
 protected:
 	void EquipShield();
@@ -255,8 +255,20 @@ protected:
 	//void OnRep_ShieldSlots();
 
 private:
-	UPROPERTY(EditDefaultsOnly, Category = "Defence")
-	TSubclassOf<AShield> ShieldClass;
+	//UPROPERTY(EditDefaultsOnly, Category = "Defence")
+	//TSubclassOf<AShield> ShieldClass;
 
+	int32 ShieldSlotIndex;
 
+	int32 ShieldStorageIndex;
+
+//标志
+public:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Flag")
+	int32 CampFlag;
+
+//头顶血条
+//private:
+//	UPROPERTY(EditDefaultsOnly, Category = "Component")
+//	UWidgetComponent* WidgetComponent;
 };

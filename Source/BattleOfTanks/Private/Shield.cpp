@@ -14,17 +14,17 @@ AShield::AShield()
 	//bReplicates = true;
 
 	MaxLifeTime = 3.0f;
-	CurrentLifeTime = MaxLifeTime;
+	//CurrentLifeTime = MaxLifeTime;
 	bIsEquipped = false;
 	DefenceValue = 10.0f;
 
-	TestMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TestMesh"));
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> TestMesh(TEXT("/Game/StarterContent/Architecture/Wall_400x200.Wall_400x200"));
-	if (TestMesh.Succeeded()) {
-		TestMeshComponent->SetStaticMesh(TestMesh.Object);
-	}
-	TestMeshComponent->SetCollisionProfileName("NoCollision");
-	RootComponent = TestMeshComponent;
+	//TestMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TestMesh"));
+	//static ConstructorHelpers::FObjectFinder<UStaticMesh> TestMesh(TEXT("/Game/StarterContent/Architecture/Wall_400x200.Wall_400x200"));
+	//if (TestMesh.Succeeded()) {
+	//	TestMeshComponent->SetStaticMesh(TestMesh.Object);
+	//}
+	//TestMeshComponent->SetCollisionProfileName("NoCollision");
+	//RootComponent = TestMeshComponent;
 }
 
 //void AShield::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {
@@ -37,7 +37,7 @@ AShield::AShield()
 void AShield::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	CurrentLifeTime = MaxLifeTime;
 }
 
 // Called every frame
@@ -46,7 +46,7 @@ void AShield::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	if (bIsEquipped) {
 		CurrentLifeTime -= DeltaTime;
-		UE_LOG(LogTemp, Warning, TEXT("current life time: %f"), CurrentLifeTime);
+		//UE_LOG(LogTemp, Warning, TEXT("current life time: %f"), CurrentLifeTime);
 		if (CurrentLifeTime <= 0) {
 			UnEquip();
 			UnAttach();
@@ -57,14 +57,19 @@ void AShield::Tick(float DeltaTime)
 }
 
 void AShield::AttachToTank(ATank* InOwnerTank, int32 InStorageIndex) {
-	check(InOwnerTank != nullptr);
+	if (!InOwnerTank) return;
 
 	OwnerTank = InOwnerTank;
 	StorageIndex = InStorageIndex;
+	OwnerTank->ShieldStoraged[StorageIndex] = this;
 }
 
 void AShield::UnAttach() {
+	if (!OwnerTank) return;
+
 	OwnerTank->ShieldStoraged[StorageIndex] = nullptr;
+	StorageIndex = 0;
+	OwnerTank = nullptr;
 }
 
 void AShield::Equip(int32 InSlotIndex) {
@@ -72,27 +77,27 @@ void AShield::Equip(int32 InSlotIndex) {
 	
 	SlotIndex = InSlotIndex;
 	OwnerTank->ShieldSlots[SlotIndex] = this;
-
-	OwnerTank->Defence += DefenceValue;
+	OwnerTank->ChangeDefenceServer(DefenceValue);
 	bIsEquipped = true;
+	UE_LOG(LogTemp, Warning, TEXT("Equip()"));
 
 	//FString str = FString::Printf(TEXT("Tank have %f defence now"), OwnerTank->Defence);
 	//check(GEngine != nullptr);
 	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, str);
-	UE_LOG(LogTemp, Warning, TEXT("Tank have %f defence now"), OwnerTank->Defence);
+	//UE_LOG(LogTemp, Warning, TEXT("Tank have %f defence now"), OwnerTank->Defence);
 }
 
 void AShield::UnEquip() {
 	if (!OwnerTank || !bIsEquipped) return;
 
-	OwnerTank->Defence -= DefenceValue;
 	bIsEquipped = false;
-
+	OwnerTank->ChangeDefenceServer(-DefenceValue);
 	OwnerTank->ShieldSlots[SlotIndex] = nullptr;
+	SlotIndex = 0;
 
 	//FString str = FString::Printf(TEXT("Tank have %f defence now"), OwnerTank->Defence);
 	//check(GEngine != nullptr);
 	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, str);
-	UE_LOG(LogTemp, Warning, TEXT("Tank have %f defence now"), OwnerTank->Defence);
+	//UE_LOG(LogTemp, Warning, TEXT("Tank have %f defence now"), OwnerTank->Defence);
 }
 

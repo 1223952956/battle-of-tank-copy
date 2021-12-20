@@ -10,11 +10,11 @@
 #include "Net/UnrealNetwork.h"
 #include "Engine/Engine.h"
 #include "TankAIController.h"
-#include "TankTrackStaticMeshComponent.h"
 #include "Components/SphereComponent.h"
 #include "Particles/ParticleSystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "Shield.h"
+#include "Components/WidgetComponent.h"
 
 // Sets default values
 ATank::ATank()
@@ -27,6 +27,7 @@ ATank::ATank()
 
 	TankAimingComponent = CreateDefaultSubobject<UTankAimingComponent>(TEXT("Aim Component"));
 	TankMovementComponent = CreateDefaultSubobject<UTankMovementComponent>(TEXT("Move Component"));
+	//WidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("Widget Component"));
 
 	LaunchSpeed = 3000.0f;
 
@@ -45,15 +46,14 @@ ATank::ATank()
 	ShieldStoraged.Init(nullptr, MaxShieldStorageNum);
 
 	MaxMoveSpeed = 1000.0f;
-	MaxTurnSpeed = 30.0f;
+	MaxTurnSpeed = 60.0f;
 
 	//bIsSwitching = false;
 
 	//Ä¬ÈÏai¿ØÖÆÀà
 	AIControllerClass = ATankAIController::StaticClass();
 
-	ShieldClass = AShield::StaticClass();
-
+	//ShieldClass = AShield::StaticClass();
 	
 }
 
@@ -109,11 +109,15 @@ void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Pressed, this, &ATank::StartFire);
 
-	PlayerInputComponent->BindAction(TEXT("SwitchPre"), IE_Pressed, this, &ATank::SwitchPreCannonType);
-	PlayerInputComponent->BindAction(TEXT("SwitchNext"), IE_Pressed, this, &ATank::SwitchNextCannonType);
+	PlayerInputComponent->BindAction(TEXT("SwitchPreCannon"), IE_Pressed, this, &ATank::SwitchPreCannonType);
+	PlayerInputComponent->BindAction(TEXT("SwitchNextCannon"), IE_Pressed, this, &ATank::SwitchNextCannonType);
 
 	PlayerInputComponent->BindAction(TEXT("EquipShield"), IE_Pressed, this, &ATank::EquipShield);
 	PlayerInputComponent->BindAction(TEXT("UnloadShield"), IE_Pressed, this, &ATank::UnEquipShield);
+
+	PlayerInputComponent->BindAction(TEXT("ChangeShieldSlot"), IE_Pressed, this, &ATank::InputChangeShieldSlot);
+	PlayerInputComponent->BindAction(TEXT("SwitchPreShield"), IE_Pressed, this, &ATank::InputSwitchPreShield);
+	PlayerInputComponent->BindAction(TEXT("SwitchNextShield"), IE_Pressed, this, &ATank::InputSwitchNextShield);
 }
 
 void ATank::GetLifetimeReplicatedProps(TArray <FLifetimeProperty>& OutLifetimeProps) const
@@ -158,11 +162,11 @@ void ATank::SetCameraReference(USceneComponent* AzimuthGimbalToSet, USceneCompon
 	SpringArmRef = SpringArmToSet;
 }
 
-void ATank::SetTrackReference(UTankTrackStaticMeshComponent* LeftTrackToSet, UTankTrackStaticMeshComponent* RightTrackToSet) {
-	check(LeftTrackToSet != nullptr && RightTrackToSet != nullptr);
-	LeftTrack = LeftTrackToSet;
-	RightTrack = RightTrackToSet;
-}
+//void ATank::SetTrackReference(UTankTrackStaticMeshComponent* LeftTrackToSet, UTankTrackStaticMeshComponent* RightTrackToSet) {
+//	check(LeftTrackToSet != nullptr && RightTrackToSet != nullptr);
+//	LeftTrack = LeftTrackToSet;
+//	RightTrack = RightTrackToSet;
+//}
 
 void ATank::PitchCamera(float AxisValue) {
 	//UE_LOG(LogTemp, Warning, TEXT("PitchCamera call"));
@@ -402,10 +406,44 @@ void ATank::AddCannonMulticast_Implementation(int32 index, int32 Num) {
 	}
 }
 
-void ATank::EquipShield() {
-	if (ShieldSlots[0] || !ShieldStoraged[0]) return;
+void ATank::InputChangeShieldSlot() {
+	ShieldSlotIndex += 1;
+	ShieldSlotIndex %= MaxShieldSlotNum;
 
-	ShieldStoraged[0]->Equip(0);
+	FString str = FString::Printf(TEXT("ShieldSlotIndex : %d"), ShieldSlotIndex);
+	check(GEngine != nullptr);
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, str);
+}
+
+void ATank::InputSwitchPreShield() {
+	ShieldStorageIndex -= 1;
+	if (ShieldStorageIndex < 0)
+		ShieldStorageIndex += MaxShieldStorageNum;
+
+	FString str = FString::Printf(TEXT("ShieldStorageIndex : %d"), ShieldStorageIndex);
+	check(GEngine != nullptr);
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, str);
+}
+
+void ATank::InputSwitchNextShield() {
+	ShieldStorageIndex += 1;
+	ShieldStorageIndex %= MaxShieldStorageNum;
+
+	FString str = FString::Printf(TEXT("ShieldStorageIndex : %d"), ShieldStorageIndex);
+	check(GEngine != nullptr);
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, str);
+}
+
+void ATank::ChangeDefenceServer_Implementation(float InNum) {
+	Defence += InNum;
+}
+
+void ATank::EquipShield() {
+	if (!ShieldStoraged[ShieldStorageIndex]) return;
+	if (ShieldSlots[ShieldSlotIndex] && ShieldSlots[ShieldSlotIndex] != ShieldStoraged[ShieldStorageIndex])
+		UnEquipShield();
+
+	ShieldStoraged[ShieldStorageIndex]->Equip(ShieldSlotIndex);
 	//if (ShieldSlot_1) {
 	//	ShieldSlot_1->Equip();
 	//	return;
@@ -431,6 +469,9 @@ void ATank::EquipShield() {
 }
 
 void ATank::UnEquipShield() {
+	if (!ShieldSlots[ShieldSlotIndex]) return;
+
+	ShieldSlots[ShieldSlotIndex]->UnEquip();
 	//UE_LOG(LogTemp, Warning, TEXT("ATank::UnloadShield()"));
 	//if (!ShieldSlot_1) return;
 	//ShieldSlot_1->UnEquip();
@@ -438,6 +479,11 @@ void ATank::UnEquipShield() {
 }
 
 void ATank::OnRep_Defence() {
-	UE_LOG(LogTemp, Warning, TEXT("OnRep_Defence()"));
+	if (GetLocalRole() == ROLE_AutonomousProxy) {
+		FString str = FString::Printf(TEXT("You have %f Defence now."), Defence);
+		check(GEngine != nullptr);
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, str);
+	}
+	
 }
 
