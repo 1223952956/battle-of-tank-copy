@@ -12,6 +12,7 @@ ATankPlayerController::ATankPlayerController() {
 	CrossHairLocationScale.Y = 0.3333f;
 
 	LineTraceRange = 50000.0f;
+
 }
 
 
