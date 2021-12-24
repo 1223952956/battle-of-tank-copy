@@ -33,7 +33,11 @@ private:
 	//Ãé×¼Íæ¼Ò
 	void AimTowardsPlayer();
 
+	//¿ª»ð
 	void Fire();
+
+	UFUNCTION(BlueprintCallable)
+	void RotateTowards(AActor* Target);
 
 	ATank* PlayerTank;
 };

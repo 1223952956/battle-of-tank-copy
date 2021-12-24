@@ -130,6 +130,7 @@ void ATank::GetLifetimeReplicatedProps(TArray <FLifetimeProperty>& OutLifetimePr
 	//DOREPLIFETIME(ATank, ShieldSlots);
 	//DOREPLIFETIME(ATank, ShieldStoraged);
 	DOREPLIFETIME(ATank, Defence);
+	DOREPLIFETIME(ATank, CampFlag);
 
 
 }

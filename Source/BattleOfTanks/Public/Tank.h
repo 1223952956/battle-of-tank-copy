@@ -195,6 +195,7 @@ protected:
 
 //移动
 protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Setup")
 	float MaxMoveSpeed;
 
 	float MaxTurnSpeed;
@@ -264,7 +265,7 @@ private:
 
 //标志
 public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Flag")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Replicated ,Category = "Flag")
 	int32 CampFlag;
 
 //头顶血条

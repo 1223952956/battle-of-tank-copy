@@ -20,8 +20,6 @@ void ATankAIController::BeginPlay() {
 void ATankAIController::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
 	
-	AimTowardsPlayer();
-	Fire();
 }
 
 ATank* ATankAIController::GetControlledTank() const {
@@ -61,4 +59,16 @@ void ATankAIController::AimTowardsPlayer() {
 void ATankAIController::Fire() {
 	ATank* ControlledTank = GetControlledTank();
 	ControlledTank->StartFire();
+}
+
+void ATankAIController::RotateTowards(AActor* Target) {
+	ATank* ControlledTank = GetControlledTank();
+	
+	FVector MyLocation = ControlledTank->GetActorLocation();
+	FVector TargetLocation = Target->GetActorLocation();
+	FVector CrossResult = FVector::CrossProduct(MyLocation, TargetLocation);
+
+
+
+	
 }
