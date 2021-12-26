@@ -38,7 +38,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 //基本输入
-protected:
+public:
 	//UFUNCTION()
 	void TestTrigger();
 
@@ -48,7 +48,10 @@ protected:
 
 	void MoveForward(float AxisValue);
 
+
 	void TurnRight(float AxisValue);
+
+
 
 //
 public:
@@ -190,6 +193,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Health")
 	virtual float TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
+	UFUNCTION(Server, Reliable)
+	void DieServer();
+
 protected:
 	void OnHealthUpdate();
 
@@ -268,8 +274,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Replicated ,Category = "Flag")
 	int32 CampFlag;
 
-//头顶血条
-//private:
-//	UPROPERTY(EditDefaultsOnly, Category = "Component")
-//	UWidgetComponent* WidgetComponent;
+//UI
+public:	
+	UFUNCTION(BlueprintNativeEvent)
+	void DisplayDefeatUI();
 };

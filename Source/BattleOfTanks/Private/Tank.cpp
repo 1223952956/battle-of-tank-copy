@@ -34,7 +34,7 @@ ATank::ATank()
 	FireRate = 1.0f;
 	bIsFiring = false;
 
-	MaxHealth = 500.0f;
+	MaxHealth = 100.0f;
 	CurrentHealth = MaxHealth;
 
 	Defence = 5.0f;
@@ -71,7 +71,11 @@ void ATank::Tick(float DeltaTime)
 
 	if (MoveAxisValue != 0.0f) {
 		FVector NewLocation = GetActorLocation();
-		NewLocation += GetActorForwardVector() * MoveAxisValue * DeltaTime  * MaxMoveSpeed;
+		NewLocation += GetActorForwardVector() * MoveAxisValue * DeltaTime * MaxMoveSpeed;
+		//FString str = FString::Printf(TEXT("NewLocation %s"), *NewLocation.ToString());
+		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, str);
+		//FString str = FString::Printf(TEXT("MoveAxisValue %f"), MoveAxisValue * DeltaTime * MaxMoveSpeed);
+		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, str);
 		SetActorLocation(NewLocation);
 		MoveForwardServer(NewLocation);
 	}
@@ -294,6 +298,7 @@ void ATank::ChangeCannon() {
 	AProjectile* Cannon = CannonBlueprintArray[CannonTypeIndex].GetDefaultObject();
 	if (Cannon) {
 		LaunchSpeed = Cannon->Speed;
+		
 	}
 }
 
@@ -348,25 +353,41 @@ void ATank::OnRep_CurrentHealth()
 }
 
 void ATank::OnHealthUpdate() {
-	//客户端血量显示
-	if (IsLocallyControlled()) {
-		FString healthMessage = FString::Printf(TEXT("You now have %f health remaining."), CurrentHealth);
-		check(GEngine != nullptr);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
+	//客户端
+	check(GetWorld() != nullptr);
+	if (/*IsLocallyControlled() && */GetController() == GetWorld()->GetFirstPlayerController()) {
+		//FString healthMessage = FString::Printf(TEXT("You now have %f health remaining."), CurrentHealth);
+		//check(GEngine != nullptr);
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Blue, healthMessage);
 
 		if (CurrentHealth <= 0)
 		{
-			FString deathMessage = FString::Printf(TEXT("You have been killed."));
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, deathMessage);
+			//FString deathMessage = FString::Printf(TEXT("You have been killed."));
+			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, deathMessage);
+			DisplayDefeatUI();
 		}
+
 	}
 
-	//服务器血量显示
-	if (GetLocalRole() == ROLE_Authority)
-	{
-		FString healthMessage = FString::Printf(TEXT("%s now has %f health remaining."), *GetFName().ToString(), CurrentHealth);
-		UE_LOG(LogTemp, Warning,  TEXT("%s"), *healthMessage);
+	if (IsLocallyControlled()) {
+		if(CurrentHealth <= 0)
+			DieServer();
 	}
+
+
+
+	
+
+	//服务器
+	//if (GetLocalRole() == ROLE_Authority)
+	//{
+	//	FString healthMessage = FString::Printf(TEXT("%s now has %f health remaining."), *GetFName().ToString(), CurrentHealth);
+	//	UE_LOG(LogTemp, Warning,  TEXT("%s"), *healthMessage);
+
+	//	if (CurrentHealth <= 0) {
+	//		Destroy();
+	//	}
+	//}
 
 }
 
@@ -386,6 +407,10 @@ float ATank::TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEven
 	SetCurrentHealth(damageApplied);
 	
 	return damageApplied;
+}
+
+void ATank::DieServer_Implementation() {
+	Destroy();
 }
 
 void ATank::AddCannonServer(int32 index, int32 Num) {
@@ -487,4 +512,9 @@ void ATank::OnRep_Defence() {
 	}
 	
 }
+
+void ATank::DisplayDefeatUI_Implementation() {
+
+}
+
 

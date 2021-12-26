@@ -31,13 +31,27 @@ private:
 	bool GetPlayerTankLocation(FVector& OutLocation);
 
 	//Ãé×¼Íæ¼Ò
-	void AimTowardsPlayer();
+	UFUNCTION(BlueprintCallable)
+	void AimTowardsPlayer(FVector Location);
 
 	//¿ª»ð
+	UFUNCTION(BlueprintCallable)
 	void Fire();
+	
+	UFUNCTION(BlueprintCallable)
+	void RotateTowards(FVector Target);
 
 	UFUNCTION(BlueprintCallable)
-	void RotateTowards(AActor* Target);
+	void StopRotate();
+
+	UFUNCTION(BlueprintCallable)
+	void MoveForward();
+
+	UFUNCTION(BlueprintCallable)
+	void StopMoveForward();
+	
+	UFUNCTION(BlueprintCallable)
+	void SwitchCannon();
 
 	ATank* PlayerTank;
 };
