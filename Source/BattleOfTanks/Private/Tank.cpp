@@ -298,7 +298,6 @@ void ATank::ChangeCannon() {
 	AProjectile* Cannon = CannonBlueprintArray[CannonTypeIndex].GetDefaultObject();
 	if (Cannon) {
 		LaunchSpeed = Cannon->Speed;
-		
 	}
 }
 
@@ -320,6 +319,7 @@ void ATank::StartFire() {
 	World->GetTimerManager().SetTimer(FiringTimer, this, &ATank::StopFire, FireRate, false);
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), FireParticleSystem, Barrel->GetSocketLocation(TEXT("Projectile")), FRotator(0.0f), true);
 	HandleFire();
+	DisplayLoadCannon();
 }
 
 void ATank::StopFire() {
@@ -344,6 +344,10 @@ void ATank::HandleFire_Implementation() {
 	check(World != nullptr);
 	AProjectile* spawnedProjectile = World->SpawnActor<AProjectile>(CannonBlueprintArray[CannonTypeIndex]/*ProjectileBlueprint*/, spawnLocation, spawnRotation, spawnParameters);
 	//spawnedProjectile->Launch(LaunchSpeed);
+}
+
+void ATank::DisplayLoadCannon_Implementation() {
+
 }
 
 void ATank::OnRep_CurrentHealth()
@@ -410,7 +414,12 @@ float ATank::TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEven
 }
 
 void ATank::DieServer_Implementation() {
+	RemoveController();
 	Destroy();
+}
+
+void ATank::RemoveController_Implementation() {
+
 }
 
 void ATank::AddCannonServer(int32 index, int32 Num) {
@@ -439,6 +448,11 @@ void ATank::InputChangeShieldSlot() {
 	FString str = FString::Printf(TEXT("ShieldSlotIndex : %d"), ShieldSlotIndex);
 	check(GEngine != nullptr);
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, str);
+	DisplaySelectedSlot(ShieldSlotIndex);
+}
+
+void ATank::DisplaySelectedSlot_Implementation(int32 InSlotIndex) {
+
 }
 
 void ATank::InputSwitchPreShield() {
@@ -459,6 +473,8 @@ void ATank::InputSwitchNextShield() {
 	check(GEngine != nullptr);
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, str);
 }
+
+
 
 void ATank::ChangeDefenceServer_Implementation(float InNum) {
 	Defence += InNum;

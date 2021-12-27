@@ -122,17 +122,18 @@ public:
 	//用于生成射击间隔的计时器
 	FTimerHandle FiringTimer;
 
+	UFUNCTION(BlueprintNativeEvent)
+	void DisplayLoadCannon();
+
 //弹药
-private:
+public:
 	//存放弹药种类和相应的个数
-	UPROPERTY(EditDefaultsOnly, Category = "Cannon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Cannon")
 	TArray<int32> CannonTypes;
 
-	UPROPERTY(EditDefaultsOnly, ReplicatedUsing = OnRep_CannonTypeIndex, Category = "Cannon")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, ReplicatedUsing = OnRep_CannonTypeIndex, Category = "Cannon")
 	int32 CannonTypeIndex;
 
-
-public:
 	//添加弹药函数, 由可拾取物调用
 	UFUNCTION(/*Server, Reliable*/)
 	void AddCannonServer(int32 index, int32 Num);
@@ -196,6 +197,9 @@ public:
 	UFUNCTION(Server, Reliable)
 	void DieServer();
 
+	UFUNCTION(BlueprintNativeEvent)
+	void RemoveController();
+
 protected:
 	void OnHealthUpdate();
 
@@ -247,6 +251,10 @@ public:
 
 	void InputSwitchPreShield();
 	void InputSwitchNextShield();
+
+	UFUNCTION(BlueprintNativeEvent)
+	void DisplaySelectedSlot(int32 InSlotIndex);
+
 	//AShield* ShieldSlot_1;
 
 	//AShield* ShieldSlot_2;

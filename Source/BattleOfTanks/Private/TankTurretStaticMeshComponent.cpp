@@ -4,7 +4,7 @@
 #include "TankTurretStaticMeshComponent.h"
 
 UTankTurretStaticMeshComponent::UTankTurretStaticMeshComponent() {
-	SetIsReplicated(true);
+	//SetIsReplicated(true);
 
 	MaxDegreesPerSecond = 60.0f;
 	//MaxRotationDegree = 180.0f;

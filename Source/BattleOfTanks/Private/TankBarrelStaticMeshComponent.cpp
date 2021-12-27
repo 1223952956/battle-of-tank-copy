@@ -5,7 +5,7 @@
 
 
 UTankBarrelStaticMeshComponent::UTankBarrelStaticMeshComponent() {
-	SetIsReplicated(true);
+	//SetIsReplicated(true);
 
 	MaxDegreesPerSecond = 20.0f;
 	MaxElevationDegree = 40.0f;

@@ -4,7 +4,7 @@
 #include "TankTrackStaticMeshComponent.h"
 
 UTankTrackStaticMeshComponent::UTankTrackStaticMeshComponent() {
-	SetIsReplicated(true);
+	//SetIsReplicated(true);
 	//ºŸ…ËÃπøÀ40∂÷
 	TrackMaxDrivingForce = 400000;
 }
