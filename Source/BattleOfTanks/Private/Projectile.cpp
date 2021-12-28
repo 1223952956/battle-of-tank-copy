@@ -121,14 +121,13 @@ void AProjectile::OnProjectileOverlapPawn(UPrimitiveComponent* OverlappedComp, A
 	{
 		UGameplayStatics::ApplyDamage(OtherActor, Damage, GetInstigator()->Controller, this, DamageType);
 
-		//if (OtherComp) {
-		//	UE_LOG(LogTemp, Warning, TEXT("Velocity : %s"), *ProjectileMovementComp->Velocity.ToString());
-		//	OtherComp->AddImpulseAtLocation(ProjectileMovementComp->Velocity, SweepResult.ImpactPoint);
-		//	OtherComp->AddForceAtLocation(ProjectileMovementComp->Velocity * 300000.0f, SweepResult.ImpactPoint);
-		//
-		//}
+		ATank* OtherTank = Cast<ATank>(OtherActor);
 
-			
+		if (OtherComp && OtherTank && OtherTank->CurrentHealth <= 0) {
+			//UE_LOG(LogTemp, Warning, TEXT("Velocity : %s"), *ProjectileMovementComp->Velocity.ToString());
+			OtherComp->AddImpulseAtLocation(ProjectileMovementComp->Velocity, SweepResult.ImpactPoint);
+			OtherComp->AddForceAtLocation(ProjectileMovementComp->Velocity * 300000.0f, SweepResult.ImpactPoint);
+		}
 	}
 
 	Destroy();

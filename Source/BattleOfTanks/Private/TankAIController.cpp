@@ -29,32 +29,32 @@ ATank* ATankAIController::GetControlledTank() const {
 	return Cast<ATank>(GetPawn());
 }
 
-void ATankAIController::GetPlayerTank() {
-	auto World = GetWorld();
-	check(World != nullptr);
+//void ATankAIController::GetPlayerTank() {
+//	auto World = GetWorld();
+//	check(World != nullptr);
+//
+//	auto PlayerController = GetWorld()->GetFirstPlayerController();
+//	if (PlayerController != NULL) {
+//		PlayerTank = Cast<ATank>(PlayerController->GetPawn());
+//	}
+//
+//
+//}
 
-	auto PlayerController = GetWorld()->GetFirstPlayerController();
-	if (PlayerController != NULL) {
-		PlayerTank = Cast<ATank>(PlayerController->GetPawn());
-	}
+//bool ATankAIController::GetPlayerTankLocation(FVector& OutLocation) {
+//	GetPlayerTank();
+//	if (!PlayerTank) return false;
+//
+//	OutLocation = PlayerTank->GetActorLocation();
+//	return true;
+//}
 
-
-}
-
-bool ATankAIController::GetPlayerTankLocation(FVector& OutLocation) {
-	GetPlayerTank();
-	if (!PlayerTank) return false;
-
-	OutLocation = PlayerTank->GetActorLocation();
-	return true;
-}
-
-void ATankAIController::AimTowardsPlayer(FVector Location) {
-	auto ControlledTank = GetControlledTank();
-	if (!ControlledTank) return;
-
-	ControlledTank->AimAt(Location);
-}
+//void ATankAIController::AimTowardsPlayer(FVector Location) {
+//	auto ControlledTank = GetControlledTank();
+//	if (!ControlledTank) return;
+//
+//	ControlledTank->AimAt(Location);
+//}
 
 void ATankAIController::Fire() {
 	ATank* ControlledTank = GetControlledTank();

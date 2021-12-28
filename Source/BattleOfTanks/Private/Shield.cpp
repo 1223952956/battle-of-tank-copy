@@ -62,6 +62,7 @@ void AShield::AttachToTank(ATank* InOwnerTank, int32 InStorageIndex) {
 	OwnerTank = InOwnerTank;
 	StorageIndex = InStorageIndex;
 	OwnerTank->ShieldStoraged[StorageIndex] = this;
+	OwnerTank->DisplayShieldStorage();
 }
 
 void AShield::UnAttach() {
@@ -69,7 +70,9 @@ void AShield::UnAttach() {
 
 	OwnerTank->ShieldStoraged[StorageIndex] = nullptr;
 	StorageIndex = 0;
+	OwnerTank->DisplayShieldStorage();
 	OwnerTank = nullptr;
+
 }
 
 void AShield::Equip(int32 InSlotIndex) {

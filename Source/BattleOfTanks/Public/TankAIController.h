@@ -26,13 +26,13 @@ private:
 
 	ATank* GetControlledTank() const;
 
-	void GetPlayerTank();
+	//void GetPlayerTank();
 
-	bool GetPlayerTankLocation(FVector& OutLocation);
+	//bool GetPlayerTankLocation(FVector& OutLocation);
 
 	//Ãé×¼Íæ¼Ò
-	UFUNCTION(BlueprintCallable)
-	void AimTowardsPlayer(FVector Location);
+	//UFUNCTION(BlueprintCallable)
+	//void AimTowardsPlayer(FVector Location);
 
 	//¿ª»ð
 	UFUNCTION(BlueprintCallable)

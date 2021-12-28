@@ -26,13 +26,13 @@ ATank::ATank()
 	SetReplicateMovement(true);
 
 	TankAimingComponent = CreateDefaultSubobject<UTankAimingComponent>(TEXT("Aim Component"));
-	TankMovementComponent = CreateDefaultSubobject<UTankMovementComponent>(TEXT("Move Component"));
+	//TankMovementComponent = CreateDefaultSubobject<UTankMovementComponent>(TEXT("Move Component"));
 	//WidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("Widget Component"));
 
 	LaunchSpeed = 3000.0f;
 
 	FireRate = 1.0f;
-	bIsFiring = false;
+	bIsLoading = false;
 
 	MaxHealth = 100.0f;
 	CurrentHealth = MaxHealth;
@@ -117,7 +117,7 @@ void ATank::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction(TEXT("SwitchNextCannon"), IE_Pressed, this, &ATank::SwitchNextCannonType);
 
 	PlayerInputComponent->BindAction(TEXT("EquipShield"), IE_Pressed, this, &ATank::EquipShield);
-	PlayerInputComponent->BindAction(TEXT("UnloadShield"), IE_Pressed, this, &ATank::UnEquipShield);
+	PlayerInputComponent->BindAction(TEXT("UnEquipShield"), IE_Pressed, this, &ATank::UnEquipShield);
 
 	PlayerInputComponent->BindAction(TEXT("ChangeShieldSlot"), IE_Pressed, this, &ATank::InputChangeShieldSlot);
 	PlayerInputComponent->BindAction(TEXT("SwitchPreShield"), IE_Pressed, this, &ATank::InputSwitchPreShield);
@@ -248,14 +248,15 @@ void ATank::SwitchNextCannonType() {
 }
 
 void ATank::StartSwitch(int SwitchNum) {
-	if (bIsFiring) return;
+	if (bIsLoading) return;
 
-	bIsFiring = true;
+	bIsLoading = true;
 	UWorld* World = GetWorld();
 	check(World != nullptr);
 	World->GetTimerManager().SetTimer(FiringTimer, this, &ATank::StopFire, FireRate, false);
 
 	SwitchServer(SwitchNum);
+	DisplayLoadCannon();
 }
 
 void ATank::SwitchServer_Implementation(int SwitchNum) {
@@ -283,14 +284,14 @@ void ATank::SwitchServer_Implementation(int SwitchNum) {
 //}
 
 void ATank::OnRep_CannonTypeIndex() {
-	if (GetLocalRole() == ROLE_AutonomousProxy) {
-		if (GEngine) {
-			FString str = FString::Printf(TEXT("cannon %d have %d left"), CannonTypeIndex, CannonTypes[CannonTypeIndex]);
-			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, str);
-			
-		}
+	//if (GetLocalRole() == ROLE_AutonomousProxy) {
+	//	if (GEngine) {
+	//		FString str = FString::Printf(TEXT("cannon %d have %d left"), CannonTypeIndex, CannonTypes[CannonTypeIndex]);
+	//		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, str);
+	//		
+	//	}
 
-	}
+	//}
 	ChangeCannon();
 }
 
@@ -309,11 +310,10 @@ void ATank::ReduceCannonNumMulticast_Implementation() {
 	ReduceCannonNum();
 }
 
-
 void ATank::StartFire() {
-	if (bIsFiring || CannonTypes[CannonTypeIndex] <= 0) return;
+	if (bIsLoading || CannonTypes[CannonTypeIndex] <= 0) return;
 
-	bIsFiring = true;
+	bIsLoading = true;
 	UWorld* World = GetWorld();
 	check(World != nullptr);
 	World->GetTimerManager().SetTimer(FiringTimer, this, &ATank::StopFire, FireRate, false);
@@ -323,7 +323,7 @@ void ATank::StartFire() {
 }
 
 void ATank::StopFire() {
-	bIsFiring = false;
+	bIsLoading = false;
 }
 
 void ATank::HandleFire_Implementation() {
@@ -378,10 +378,6 @@ void ATank::OnHealthUpdate() {
 			DieServer();
 	}
 
-
-
-	
-
 	//·þÎñÆ÷
 	//if (GetLocalRole() == ROLE_Authority)
 	//{
@@ -415,7 +411,16 @@ float ATank::TakeDamage(float DamageTaken, struct FDamageEvent const& DamageEven
 
 void ATank::DieServer_Implementation() {
 	RemoveController();
-	Destroy();
+	
+	FTimerHandle TimerHandle;
+	UWorld* World = GetWorld();
+	check(World != nullptr);
+
+	World->GetTimerManager().SetTimer(TimerHandle, [&]() 
+	{
+		Destroy();
+	}, 2.0f, false);
+	
 }
 
 void ATank::RemoveController_Implementation() {
@@ -445,9 +450,9 @@ void ATank::InputChangeShieldSlot() {
 	ShieldSlotIndex += 1;
 	ShieldSlotIndex %= MaxShieldSlotNum;
 
-	FString str = FString::Printf(TEXT("ShieldSlotIndex : %d"), ShieldSlotIndex);
-	check(GEngine != nullptr);
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, str);
+	//FString str = FString::Printf(TEXT("ShieldSlotIndex : %d"), ShieldSlotIndex);
+	//check(GEngine != nullptr);
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, str);
 	DisplaySelectedSlot(ShieldSlotIndex);
 }
 
@@ -455,26 +460,42 @@ void ATank::DisplaySelectedSlot_Implementation(int32 InSlotIndex) {
 
 }
 
-void ATank::InputSwitchPreShield() {
-	ShieldStorageIndex -= 1;
-	if (ShieldStorageIndex < 0)
-		ShieldStorageIndex += MaxShieldStorageNum;
+void ATank::DisplayShieldStorage_Implementation() {
 
-	FString str = FString::Printf(TEXT("ShieldStorageIndex : %d"), ShieldStorageIndex);
-	check(GEngine != nullptr);
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, str);
+}
+
+void ATank::DisplaySelectedStorage_Implementation() {
+
+}
+
+void ATank::InputSwitchPreShield() {
+	int CurrentIndex = ShieldStorageIndex;
+	do {
+		ShieldStorageIndex -= 1;
+		if (ShieldStorageIndex < 0)
+			ShieldStorageIndex += MaxShieldStorageNum;
+	} while (!ShieldStoraged[ShieldStorageIndex] && CurrentIndex != ShieldStorageIndex);
+
+	DisplaySelectedStorage();
+
+	//FString str = FString::Printf(TEXT("ShieldStorageIndex : %d"), ShieldStorageIndex);
+	//check(GEngine != nullptr);
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, str);
 }
 
 void ATank::InputSwitchNextShield() {
-	ShieldStorageIndex += 1;
-	ShieldStorageIndex %= MaxShieldStorageNum;
+	int CurrentIndex = ShieldStorageIndex;
+	do {
+		ShieldStorageIndex += 1;
+		ShieldStorageIndex %= MaxShieldStorageNum;
+	} while (!ShieldStoraged[ShieldStorageIndex] && CurrentIndex != ShieldStorageIndex);
 
-	FString str = FString::Printf(TEXT("ShieldStorageIndex : %d"), ShieldStorageIndex);
-	check(GEngine != nullptr);
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, str);
+	DisplaySelectedStorage();
+
+	//FString str = FString::Printf(TEXT("ShieldStorageIndex : %d"), ShieldStorageIndex);
+	//check(GEngine != nullptr);
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, str);
 }
-
-
 
 void ATank::ChangeDefenceServer_Implementation(float InNum) {
 	Defence += InNum;
